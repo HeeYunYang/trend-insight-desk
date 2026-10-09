@@ -45,6 +45,7 @@
     },
     async unlock(pass){
       if (!pass) throw new Error("암호를 입력해 주세요.");
+      if (/^(github_pat_|ghp_)/.test(pass.trim())) throw new Error("여기는 금고 암호 칸입니다. GitHub 토큰은 금고를 연 다음 나오는 'GitHub 토큰' 칸에 넣어 주세요.");
       const { file } = await this._fetchPublic();
       if (!file || file.v !== 1 || !file.salt) throw new Error("금고 파일 형식이 올바르지 않습니다.");
       const key = await deriveKey(pass, unb64(file.salt), file.iter);
