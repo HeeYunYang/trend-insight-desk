@@ -431,6 +431,8 @@ function renderBrief(){
     </li>`).join("")}</ol>
   </div>
   <div class="layerhead"><h2>내 분야</h2><span class="label">식음료 · 뷰티 · 기술 · 경제 · 한국</span></div>`:""}
+  ${b.force_note&&b.force_note.text?`<div class="layer"><div class="layerhead"><h2>${esc(b.force_note.title||"이번 주 큰 힘")}</h2><span class="label">느린 변수 · 주간</span></div>
+    <p style="margin:0">${esc(b.force_note.text)}</p>${forceChips(b.force_note.forces)}</div>`:""}
 
   ${deep.length?`<div class="deep"><div class="sectionhead"><h2>심층 분석</h2><span class="label">${deep.length}건</span></div>
     ${deep.map(d=>`<article class="card">
@@ -480,7 +482,8 @@ function renderBrief(){
   $("bnext").onclick=()=>{S.briefIdx=i-1; S.fieldFilter="all"; renderBrief();};
   $("ffilter").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{S.fieldFilter=c.dataset.f; renderBrief();});
   p.querySelectorAll("[data-story]").forEach(x=>x.onclick=()=>{ selectTab("t-stories"); const el=$("sty-"+x.dataset.story); if(el){ el.open=true; el.scrollIntoView({block:"start"}); } });
-  wireTrendButtons(p);
+  wireForces(p);
+wireTrendButtons(p);
 }
 function renderCandidatesFor(date){
   const c=S.trends.filter(t=>t.status==="candidate" && t.proposed_on===date);
