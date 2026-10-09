@@ -52,10 +52,10 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     await tab(p, 't-ind');
     ok((await p.$$('#p-ind .gauge')).length === 3, N + ': gauges');
     ok((await p.$$('#p-ind .moved .icard')).length >= 1, N + ': moved cards');
-    ok((await p.$$('#p-ind details.group')).length === 9, N + ': 9 question groups');
+    ok((await p.$$('#p-ind details.group')).length === 10, N + ': 10 question groups');
     const empty = await p.$$eval('#p-ind details.group .icard', cs => cs.filter(c => /값 수집 중|값을 모으는 중/.test(c.textContent)).map(c => c.id));
     ok(empty.length === 0, N + ': indicators without data: ' + empty.join(','));
-    const nCards = await p.$$eval('#p-ind details.group .icard', cs => cs.length); ok(nCards === 34, N + ': library cards = ' + nCards);
+    const nCards = await p.$$eval('#p-ind details.group .icard', cs => cs.length); ok(nCards === 38, N + ': library cards = ' + nCards);
     const calc = await p.$$eval('#p-ind details.group .icard', cs => cs.filter(c => !c.textContent.includes('어떻게 계산되나')).map(c => c.id));
     ok(calc.length === 0, N + ': missing how_calc: ' + calc.join(','));
     // open every group, flip a period, jump via map + related chip
@@ -63,10 +63,13 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     await p.$eval('#p-ind details.group .icard details.back', d => d.open = true);
     const per = await p.$('#p-ind details.group .icard details.back[open] [data-per="1m"]'); ok(!!per, N + ': period button');
     if (per) { await per.click(); await p.waitForTimeout(200); ok(await p.$eval('#p-ind details.group .icard details.back', d => d.open), N + ': card closed after period change'); }
-    ok((await p.$$('#p-ind details.group[open]')).length === 9, N + ': groups closed after period change');
+    ok((await p.$$('#p-ind details.group[open]')).length === 10, N + ': groups closed after period change');
     const node = await p.$('svg.map [data-node="brent"]'); ok(!!node, N + ': map node');
     if (node) { await node.click(); await p.waitForTimeout(300); }
     const chip = p.locator('#p-ind [data-jump]:visible').first(); ok(await chip.count() === 1, N + ': related chip'); if (await chip.count()) { await chip.click(); await p.waitForTimeout(400); }
+    // nationalism layer: closing group, map nodes, force chips, driver names
+    ok((await p.$$('#p-ind details.group[data-group="closing"] .icard')).length === 4, N + ': closing group cards');
+    ok(!!(await p.$('svg.map [data-node="us_tariff"]')) && !!(await p.$('svg.map [data-node="politics"]')), N + ': politics/tariff map nodes');
     const nanText = await p.$$eval('#p-ind svg.spark', ss => ss.filter(s => /NaN|undefined/.test(s.outerHTML)).length);
     ok(nanText === 0, N + ': NaN/undefined in charts: ' + nanText);
     ok(await noOverflow(p), N + ': indicators overflow horizontally');
@@ -75,13 +78,18 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     // stories
     await tab(p, 't-stories');
     ok((await p.$$('#p-stories .story')).length >= 5, N + ': stories');
+    ok((await p.$$('#p-stories .chip.force')).length >= 5, N + ': force chips');
+    const fc = p.locator('#p-stories .chip.force', { hasText: '자국주의' }).first();
+    if (await fc.count()) { await fc.click(); await p.waitForTimeout(200); ok(await p.isVisible('#sv-politics'), N + ': force chip -> slow row'); } else ok(false, N + ': politics chip missing');
+    await tab(p, 't-stories');
     ok(await noOverflow(p), N + ': stories overflow');
     // trends / slow / predictions
     await tab(p, 't-trends');
     ok((await p.$$('#p-trends .trend')).length >= 2, N + ': trends');
     ok((await p.$$('#p-trends [data-act]:visible, #p-trends select:visible, #p-trends input:visible')).length === 0, N + ': trend controls visible');
+    ok(!/\bpolitics\b|\brates\b/.test(await p.textContent('#p-trends')), N + ': raw driver ids shown');
     await tab(p, 't-slow');
-    ok((await p.$$('#p-slow tbody tr')).length === 12, N + ': slow vars');
+    ok((await p.$$('#p-slow tbody tr')).length === 13, N + ': slow vars');
     await tab(p, 't-pred');
     ok(await p.isHidden('#predform'), N + ': prediction form visible');
     ok(await noOverflow(p), N + ': predictions overflow');

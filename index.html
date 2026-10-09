@@ -108,6 +108,9 @@ details.more[open] summary{margin-bottom:8px}
 .action{border-left:3px solid var(--accent);padding:2px 0 2px 10px;font-size:14px}
 .src{font-size:12.5px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+tr.hl td{background:var(--band)}
+.chips.forces{margin:2px 0 4px}
+.chip.force{color:var(--ink);border-color:var(--line-strong)}
 .chip{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .tchip{font-size:11.5px;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--ink)}
@@ -501,7 +504,7 @@ function markSeen(id){ IND.seen.add(id); try{ localStorage.setItem("td-seen",JSO
 const DAY=864e5;
 function lineKeys(x){ return (x.lines&&x.lines.length) ? x.lines.map(l=>l.key) : ["main"]; }
 function ser(x,k){ const S0=x.series||{}; return (S0[k]||(k==="main"?S0.value:null)||[]).filter(p=>Array.isArray(p)&&p[0]&&typeof p[1]==="number").sort((a,b)=>a[0].localeCompare(b[0])); }
-function windowPts(pts,win){ if(!pts.length) return pts; const end=new Date(pts[pts.length-1][0]).getTime(); const span=(win==="5y"?5*365:365)*DAY; return pts.filter(p=>new Date(p[0]).getTime()>=end-span); }
+function windowPts(pts,win){ if(!pts.length) return pts; const end=new Date(pts[pts.length-1][0]).getTime(); const span=(win==="all"?1e6:win==="5y"?5*365:365)*DAY; return pts.filter(p=>new Date(p[0]).getTime()>=end-span); }
 function pctile(arr,q){ const a=[...arr].sort((x,y)=>x-y); const i=(a.length-1)*q, lo=Math.floor(i), hi=Math.ceil(i); return a[lo]+(a[hi]-a[lo])*(i-lo); }
 function analyze(x){
   const k=lineKeys(x)[0], pts=ser(x,k);
@@ -524,7 +527,7 @@ const fmtChg=(c,u)=>{ if(c==null) return ""; const s=c>0?"▲":c<0?"▼":"–"; 
 function spark(x,a,{w=300,h=64,big=false,period}={}){
   const keys=lineKeys(x); let lines=keys.map((k,i)=>({k,i,pts:ser(x,k)})).filter(l=>l.pts.length);
   if(!lines.length) return `<svg class="spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="자료 수집 중"><text x="${w/2}" y="${h/2}" text-anchor="middle">값을 모으는 중</text></svg>`;
-  if(period){ const end=Math.max(...lines.map(l=>new Date(l.pts[l.pts.length-1][0]).getTime())); const span={"1m":31,"1y":366,"5y":1830}[period]*DAY; lines=lines.map(l=>({...l,pts:l.pts.filter(p=>new Date(p[0]).getTime()>=end-span)})).filter(l=>l.pts.length); }
+  if(period){ const end=Math.max(...lines.map(l=>new Date(l.pts[l.pts.length-1][0]).getTime())); const span={"1m":31,"1y":366,"5y":1830,"all":1e6}[period]*DAY; lines=lines.map(l=>({...l,pts:l.pts.filter(p=>new Date(p[0]).getTime()>=end-span)})).filter(l=>l.pts.length); }
   const all=lines.flatMap(l=>l.pts);
   const ts=all.map(p=>new Date(p[0]).getTime()), vs=all.map(p=>p[1]);
   let y0=Math.min(...vs), y1=Math.max(...vs);
@@ -556,7 +559,7 @@ function multiLatest(x){
   return `<div class="legend">${x.lines.map((l,i)=>{ const p=ser(x,l.key); const v=p.length?p[p.length-1][1]:null; return `<span style="--lc:var(${SC[i%SC.length]})">${esc(l.label)} <b class="mono" style="font-weight:500;color:var(--ink)">${fmt(v)}</b></span>`; }).join("")}</div>`;
 }
 function indCard(x,{why,open}={}){
-  const a=analyze(x); const per=IND.period[x.id]||(x.window==="5y"?"5y":"1y");
+  const a=analyze(x); const per=IND.period[x.id]||(x.window==="all"?"all":x.window==="5y"?"5y":"1y");
   const first=!IND.seen.has(x.id);
   const val = a.last? `${fmt(a.last[1])}<small>${esc(x.unit)}</small>` : `<small>값 수집 중</small>`;
   return `<article class="icard" id="ind-${esc(x.id)}">
@@ -573,10 +576,10 @@ function indCard(x,{why,open}={}){
         ${x.how_calc?`<dt>어떻게 계산되나</dt><dd>${esc(x.how_calc)}</dd>`:""}
         ${x.why_now?`<dt>지금 왜 이런가</dt><dd>${esc(x.why_now)}</dd>`:""}
         ${x.for_me?`<dt>나에게 의미</dt><dd>${esc(x.for_me)}</dd>`:""}
-        <dt>평소 범위</dt><dd>${a.p20!=null?`${fmt(a.p20)} ~ ${fmt(a.p80)} ${esc(x.unit)} (최근 ${x.window==="5y"?"5년":"1년"} 값의 가운데 60%)${a.pct!=null?` · 지금은 ${a.pct>=99?"이 기간 최고 수준":a.pct<=1?"이 기간 최저 수준":a.pct>=50?`상위 ${100-a.pct}%`:`하위 ${a.pct}%`} 위치`:""}`:"값이 더 쌓이면 계산합니다"}</dd>
+        <dt>평소 범위</dt><dd>${a.p20!=null?`${fmt(a.p20)} ~ ${fmt(a.p80)} ${esc(x.unit)} (${x.window==="all"?"기록 전체":x.window==="5y"?"최근 5년":"최근 1년"} 값의 가운데 60%)${a.pct!=null?` · 지금은 ${a.pct>=99?"이 기간 최고 수준":a.pct<=1?"이 기간 최저 수준":a.pct>=50?`상위 ${100-a.pct}%`:`하위 ${a.pct}%`} 위치`:""}`:"값이 더 쌓이면 계산합니다"}</dd>
         ${(x.thresholds||[]).length?`<dt>주의선</dt><dd>${x.thresholds.map(t=>esc(t.note)).join(" / ")}</dd>`:""}
       </dl>
-      <div class="row" style="margin-top:6px"><span class="label">추이</span><span class="periods">${["1m","1y","5y"].map(p=>`<button data-per="${p}" data-id="${esc(x.id)}" aria-pressed="${p===per}">${{"1m":"1개월","1y":"1년","5y":"5년"}[p]}</button>`).join("")}</span></div>
+      <div class="row" style="margin-top:6px"><span class="label">추이</span><span class="periods">${(x.window==="all"?["5y","all"]:["1m","1y","5y"]).map(p=>`<button data-per="${p}" data-id="${esc(x.id)}" aria-pressed="${p===per}">${{"1m":"1개월","1y":"1년","5y":"5년","all":"전체"}[p]}</button>`).join("")}</span></div>
       ${spark(x,a,{w:innerWidth<560?340:600,h:innerWidth<560?170:190,big:true,period:per})}
       <div class="src">${esc(FREQ[x.freq]||"")} 발표${x.next_release?` · 다음 발표 ${esc(x.next_release)}`:""} · ${x.source_url&&safeUrl(x.source_url)?`<a href="${esc(x.source_url)}" target="_blank" rel="noopener">${esc(x.source||x.source_hint)}</a>`:esc(x.source||x.source_hint||"")}${x.as_of?` · 기준 ${esc(x.as_of)}`:""}</div>
       ${(x.related||[]).length?`<div class="chips">${x.related.map(r=>{const y=S.inds.find(z=>z.id===r); return y?`<button class="chip" data-jump="${esc(r)}">${esc(y.name.replace(/\(.*\)/,""))}</button>`:"";}).join("")}${x.story&&storyName(x.story)?`<button class="storylink" data-story="${esc(x.story)}">${esc(storyName(x.story))} ›</button>`:""}</div>`:""}
@@ -594,13 +597,14 @@ function gaugeCalc(){
   return out;
 }
 const MAP={cols:["원인","1차 충격","물가·금리","2차 파급","내 시장"],
-  nodes:[["iran-war-hormuz",0,0,"이란 전쟁·호르무즈",1],["personal-ai-agents",0,2.6,"AI 에이전트 붐",1],
-    ["brent",1,0],["shipping",1,1],["bigtech_capex",1,2.4],["dram",1,3.4],
+  nodes:[["iran-war-hormuz",0,0,"이란 전쟁·호르무즈",1],["politics",0,1.3,"자국주의·양극화","slow"],["personal-ai-agents",0,2.6,"AI 에이전트 붐",1],
+    ["brent",1,0],["shipping",1,0.85],["us_tariff",1,1.6],["bigtech_capex",1,2.4],["dram",1,3.4],
     ["cpi",2,0],["fao",2,1],["fedfunds",2,1.9],["sp500",2,3],
     ["ust10y",3,0.6],["dxy",3,1.6],["kr_exports",3,2.6],["kospi",3,3.5],
     ["mortgage30",4,0],["sf_caprate",4,0.9],["restaurant_sales",4,1.8],["usdkrw",4,2.7],["sf_rent",4,3.6]],
   edges:[["iran-war-hormuz","brent"],["iran-war-hormuz","shipping"],["brent","cpi"],["shipping","fao"],["fao","cpi"],["cpi","fedfunds"],["fedfunds","ust10y"],["ust10y","mortgage30"],["ust10y","sf_caprate"],["cpi","restaurant_sales"],["fedfunds","dxy"],["dxy","usdkrw"],
-    ["personal-ai-agents","bigtech_capex"],["bigtech_capex","dram"],["bigtech_capex","sp500"],["dram","kr_exports"],["kr_exports","kospi"],["kospi","usdkrw"],["bigtech_capex","sf_rent"]]};
+    ["personal-ai-agents","bigtech_capex"],["bigtech_capex","dram"],["bigtech_capex","sp500"],["dram","kr_exports"],["kr_exports","kospi"],["kospi","usdkrw"],["bigtech_capex","sf_rent"],
+    ["politics","us_tariff"],["us_tariff","cpi"],["us_tariff","fao"],["politics","ust10y"],["politics","sf_rent"],["us_tariff","dxy"]]};
 function renderMap(){
   const W=900,H=330,cw=W/5,bw=150,bh=34;
   const pos={}; MAP.nodes.forEach(([id,c,r])=>pos[id]={x:c*cw+(cw-bw)/2,y:40+r*66});
@@ -608,7 +612,7 @@ function renderMap(){
   g+=MAP.edges.map(([a,b])=>{const p=pos[a],q=pos[b]; if(!p||!q) return ""; const x1=p.x+bw,y1=p.y+bh/2,x2=q.x,y2=q.y+bh/2,mx=(x1+x2)/2; return `<path class="edge" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;}).join("");
   g+=MAP.nodes.map(([id,c,r,label,story])=>{ const p=pos[id]; let st="", name=label;
     if(!story){ const x=S.inds.find(z=>z.id===id); if(!x) return ""; st=analyze(x).state; name=x.name.replace(/\(.*\)/,"").trim(); }
-    return `<g class="node${story?" story":""}" data-s="${esc(st)}" data-node="${esc(id)}" data-story-node="${story?1:""}" tabindex="0" role="button" aria-label="${esc(name)} ${esc(st)}"><rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="6"/><text x="${p.x+bw/2}" y="${p.y+bh/2+4}" text-anchor="middle">${esc(name.length>13?name.slice(0,12)+"…":name)}</text></g>`; }).join("");
+    return `<g class="node${story?" story":""}" data-s="${esc(st)}" data-node="${esc(id)}" data-story-node="${story===1?1:""}" data-slow-node="${story==="slow"?1:""}" tabindex="0" role="button" aria-label="${esc(name)} ${esc(st)}"><rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="6"/><text x="${p.x+bw/2}" y="${p.y+bh/2+4}" text-anchor="middle">${esc(name.length>13?name.slice(0,12)+"…":name)}</text></g>`; }).join("");
   return `<div class="mapwrap"><svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="지표 연결 지도">${g}</svg></div>`;
 }
 function renderIndicators(){
@@ -670,11 +674,14 @@ function wireInd(p){
   p.querySelectorAll("[data-per]").forEach(b=>b.onclick=()=>{ IND.period[b.dataset.id]=b.dataset.per; const openGroups=[...p.querySelectorAll("details.group[open]")].map(d=>d.dataset.group); const y=window.scrollY; renderIndicators(); openGroups.forEach(g=>{const d=p.querySelector(`details.group[data-group="${g}"]`); if(d) d.open=true;}); p.querySelectorAll(`#ind-${CSS.escape(b.dataset.id)} details.back`).forEach(d=>d.open=true); window.scrollTo(0,y); });
   const jump=id=>{ const card=[...p.querySelectorAll(`#ind-${CSS.escape(id)}`)].pop(); if(!card) return; const grp=card.closest("details.group"); if(grp) grp.open=true; card.scrollIntoView({block:"start",behavior:"smooth"}); };
   p.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jump(b.dataset.jump));
-  p.querySelectorAll("[data-node]").forEach(n=>{ const go=()=>{ if(n.dataset.storyNode){ selectTab("t-stories"); const el=$("sty-"+n.dataset.node); if(el){ el.open=true; el.scrollIntoView({block:"start"}); } } else jump(n.dataset.node); }; n.addEventListener("click",go); n.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  p.querySelectorAll("[data-node]").forEach(n=>{ const go=()=>{ if(n.dataset.slowNode){ selectTab("t-slow"); const el=$("sv-"+n.dataset.node); if(el){ el.classList.add("hl"); el.scrollIntoView({block:"center"}); } } else if(n.dataset.storyNode){ selectTab("t-stories"); const el=$("sty-"+n.dataset.node); if(el){ el.open=true; el.scrollIntoView({block:"start"}); } } else jump(n.dataset.node); }; n.addEventListener("click",go); n.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
   p.querySelectorAll("[data-story]").forEach(x=>x.onclick=()=>{ selectTab("t-stories"); const el=$("sty-"+x.dataset.story); if(el){ el.open=true; el.scrollIntoView({block:"start"}); } });
 }
 
 /* ---------- stories ---------- */
+function slowName(id){ const v=(S.slow||[]).find(x=>x.id===id); return v ? v.variable : id; }
+function forceChips(ids){ ids=(ids||[]).filter(Boolean); return ids.length?`<div class="chips forces">${ids.map(f=>`<button class="chip force" data-force="${esc(f)}">${esc(slowName(f))}</button>`).join("")}</div>`:""; }
+function wireForces(p){ p.querySelectorAll("[data-force]").forEach(b=>b.onclick=()=>{ selectTab("t-slow"); const el=$("sv-"+b.dataset.force); if(el){ el.classList.add("hl"); el.scrollIntoView({block:"center"}); } }); }
 function storyName(id){ const s=S.stories.find(x=>x.id===id); return s ? s.title : null; }
 const SORDER={"확전":0,"진행":1,"진정":2,"종료":3};
 function renderStories(){
@@ -693,6 +700,7 @@ function renderStories(){
         <span class="lvl" title="파급력 ${lvl}/5" aria-label="파급력 ${lvl}/5">${[1,2,3,4,5].map(n=>`<i class="${n<=lvl?"on":""}"></i>`).join("")}</span>
         <span class="reg muted" style="font-size:12px">${esc(s.region||"")}${s.started?` · ${esc(s.started)}부터`:""}</span></div>
       <h3>${esc(s.title)}</h3>
+      ${forceChips(s.forces)}
       ${s.summary?`<div>${esc(s.summary)}</div>`:""}
       ${s.second_order?`<dl class="grid"><dt>2차 효과</dt><dd>${esc(s.second_order)}</dd>${s.opportunities?`<dt>기회 경로</dt><dd>${esc(s.opportunities)}</dd>`:""}${s.watch?`<dt>지켜볼 지표</dt><dd>${esc(s.watch)}</dd>`:""}</dl>`:""}
       ${ups.length?`<details class="more" id="sty-${esc(s.id)}"><summary>경과 ${ups.length}건 · 최근 ${esc(ups[0].date||"")}</summary>
@@ -700,6 +708,7 @@ function renderStories(){
       <div class="mono muted" style="font-size:11.5px">갱신 ${esc((s.updated||"").slice(0,10))}</div>
     </article>`;}).join("")
   :`<div class="empty"><h3>추적 중인 이야기가 없습니다</h3><p class="muted" style="margin:0">매일 수집 중 큰 사건이 등장하면 여기에 등록되고 경과가 쌓입니다.</p></div>`}`;
+  wireForces(p);
 }
 
 /* ---------- trends ---------- */
@@ -714,7 +723,7 @@ function renderTrends(){
   ${adopted.length?adopted.map(t=>`<article class="trend">
       <div class="top" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="stage">${esc(t.stage||"태동")}</span><span class="mono muted" style="font-size:12px">근거 ${t.evidence_count||0} · 반대 ${t.counter_count||0}</span></div>
       <p class="statement">${esc(t.statement)}</p>
-      ${t.drivers?`<div class="note"><b style="font-weight:500;color:var(--ink)">동인</b> ${esc(t.drivers)}</div>`:""}
+      ${t.drivers?`<div class="note"><b style="font-weight:500;color:var(--ink)">동인</b> ${esc((Array.isArray(t.drivers)?t.drivers:[t.drivers]).map(slowName).join(" · "))}</div>`:""}
       ${t.implication?`<div class="action">${esc(t.implication)}</div>`:""}
       <div class="conf"><span class="label">확신도</span><div class="bar"><i style="width:${Math.round((t.confidence||0)*100)}%"></i></div><span class="mono" style="font-size:13px">${Math.round((t.confidence||0)*100)}%</span></div>
       ${(t.evidence||[]).length?`<details class="more"><summary>최근 근거 ${Math.min(t.evidence.length,8)}건</summary><ul class="evid">${t.evidence.slice(-8).reverse().map(e=>`<li><span class="mono">${esc(e.date)}</span> ${esc(e.title)}</li>`).join("")}</ul></details>`:""}
@@ -751,7 +760,7 @@ function renderSlow(){
   <div class="sectionhead"><h2>느린 변수</h2><span class="label">분기마다 갱신</span></div>
   <p class="note" style="margin:0">10년 단위로 방향이 거의 정해진 힘입니다. 빠르게 변하는 뉴스를 이 표에 대보고, 밀어주는 흐름인지 거스르는 흐름인지를 먼저 봅니다.</p>
   ${rows.length?`<div class="tablewrap"><table><thead><tr><th>영역</th><th>변수</th><th>방향</th><th>현재 상태</th><th>사업·투자에 대한 의미</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr><td class="cat">${esc(r.category)}</td><td>${esc(r.variable)}</td><td class="dir">${esc(r.direction)}</td><td>${esc(r.current)}</td><td>${esc(r.implication)}</td></tr>`).join("")}
+    ${rows.map(r=>`<tr id="sv-${esc(r.id)}"><td class="cat">${esc(r.category)}</td><td>${esc(r.variable)}</td><td class="dir">${esc(r.direction)}</td><td>${esc(r.current)}</td><td>${esc(r.implication)}</td></tr>`).join("")}
   </tbody></table></div><p class="note mono" style="margin:0;font-size:12px">마지막 갱신 ${esc(rows.map(r=>r.updated||"").sort().pop()?.slice(0,10)||"–")}</p>`
   :`<div class="empty"><h3>느린 변수 표를 준비하는 중</h3><p class="muted" style="margin:0">인구구조, 기술 비용 곡선, 기후, 도시화 등 장기 변수가 여기에 정리됩니다.</p></div>`}`;
 }
@@ -943,7 +952,7 @@ renderAll();
   db.doc("meta/indicator_groups").onSnapshot(d=>{ S.indGroups=d.exists?(d.data().groups||[]):[]; keepOpen(renderIndicators); }, err);
   db.doc("meta/indicators_day").onSnapshot(d=>{ S.indDay=d.exists?d.data():null; keepOpen(renderIndicators); }, err);
   db.collection("trends").onSnapshot(s=>{ S.trends=docs(s); renderTrends(); renderBrief(); }, err);
-  db.collection("slow_vars").onSnapshot(s=>{ S.slow=docs(s); renderSlow(); }, err);
+  db.collection("slow_vars").onSnapshot(s=>{ S.slow=docs(s); renderSlow(); renderStories(); renderTrends(); }, err);
   db.collection("predictions").onSnapshot(s=>{ S.preds=docs(s); renderPreds(); }, err);
   if(window.TD_VAULT){ window.TD_VAULT.onUnlock=()=>startPrivate(db,"me"); if(window.TD_VAULT.unlocked) startPrivate(db,"me"); else renderPrivate(); }
   else { const user=await window.claude?.use?.("user"); const uid=user?await user.id():null; if(uid) startPrivate(db,uid); else { S.priv.status="noid"; renderPrivate(); } }
