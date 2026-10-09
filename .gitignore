@@ -1,0 +1,3 @@
+*.tmp
+tools/shot-*.png
+__pycache__/
