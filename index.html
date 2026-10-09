@@ -261,6 +261,76 @@ svg.map .node{cursor:pointer}
 svg.map .col{font-size:11px;fill:var(--muted);letter-spacing:.04em}
 .gloss{display:grid;gap:6px;font-size:13.5px}
 .gloss b{font-weight:600}
+/* ---- v2 brief: weather, deep issues, bank, theme board, selected news ---- */
+.wx{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
+.wx div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:2px;min-width:0}
+.wx .k{font-size:12px;color:var(--muted)}
+.wx .v{font-family:var(--mono);font-size:17px;font-variant-numeric:tabular-nums}
+.wx .v[data-l="높음"]{color:var(--down)} .wx .v[data-l="낮음"]{color:var(--accent)}
+.wx .d{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.di{background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:18px 18px 16px;display:grid;gap:16px;min-width:0}
+.di .kicker{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.di .kchip{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--bg)}
+.di .kchip.theme{border-color:var(--accent);color:var(--accent)}
+.di .q{font-family:var(--display);font-size:21px;line-height:1.45;margin:0;text-wrap:balance}
+.di .verdict{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 12px;border-radius:0 6px 6px 0;display:grid;gap:6px}
+.di .verdict p{margin:0}
+.di .confs{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--mono);font-size:12px}
+.di .confs b{font-weight:500}
+.di .part{display:grid;gap:8px;min-width:0}
+.di .part>.label{border-bottom:1px solid var(--line);padding-bottom:4px}
+.di .part p{margin:0}
+.di .issue{display:grid;gap:8px;padding-top:4px}
+.di .issue h4{margin:0;font-size:14.5px;font-weight:600}
+.di .vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.di .vs{grid-template-columns:1fr}}
+.di .side{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:4px;min-width:0;background:var(--bg)}
+.di .side .who{font-size:12.5px;font-weight:600}
+.di .side.a .who{color:var(--s1)} .di .side.b .who{color:var(--s2)}
+.di .side p{margin:0;font-size:14px}
+.di .side .ssrc{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.di .call{font-size:14px;margin:0;padding-left:10px;border-left:2px solid var(--line-strong)}
+.di ol,.di ul.plain{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px}
+.di .me div{font-size:14px} .di .me b{font-weight:600}
+.di .qc{display:flex;flex-wrap:wrap;gap:6px}
+.di .qc span{font-family:var(--mono);font-size:11.5px;padding:2px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--line)}
+.di .qc span.ok::before{content:"✓ ";color:var(--up)}
+.di .srcs{display:grid;gap:10px;margin-top:8px;font-size:13px}
+.di .scen{display:grid;gap:8px}
+.di .scen div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg);font-size:14px}
+.bank{display:grid;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.brow{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.brow:first-child{border-top:0}
+.brow .sc{font-family:var(--mono);font-size:15px;text-align:center}
+.brow .t{font-size:14px;min-width:0}
+.brow .m{font-size:12px;color:var(--muted)}
+.need{font-family:var(--mono);font-size:11px;white-space:nowrap;padding:2px 7px;border-radius:4px;border:1px solid var(--line)}
+.need.wait{color:var(--warn);border-color:var(--warn)} .need.ready{color:var(--up);border-color:var(--up)}
+@media (max-width:480px){.brow{grid-template-columns:36px 1fr}.brow .need{grid-column:2;justify-self:start}}
+.tboard{display:grid;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.trow{display:grid;grid-template-columns:28px 150px 1fr;gap:10px;padding:10px 12px;border-top:1px solid var(--line);align-items:baseline;cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%}
+.trow:first-child{border-top:0}
+.trow .mv{font-family:var(--mono);font-size:15px;text-align:center}
+.trow .mv[data-m="up"]{color:var(--down)} .trow .mv[data-m="flat"]{color:var(--muted)} .trow .mv[data-m="down"]{color:var(--up)}
+.trow .nm{font-weight:600;font-size:14px} .trow .ln{font-size:14px;min-width:0}
+@media (max-width:520px){.trow{grid-template-columns:24px 1fr}.trow .ln{grid-column:2}}
+.sel{display:grid;gap:6px}
+ul.news{list-style:none;margin:0;padding:0}
+ul.news li{padding:9px 0;border-top:1px solid var(--line);display:grid;gap:2px;min-width:0}
+ul.news li:first-child{border-top:0}
+ul.news a{color:var(--ink);text-decoration:none;font-weight:500}
+ul.news a:hover{text-decoration:underline}
+ul.news .w{font-size:13.5px;color:var(--muted)}
+ul.news .s{font-family:var(--mono);font-size:11px;color:var(--muted)}
+ul.scan{margin:8px 0 0;padding-left:18px;display:grid;gap:3px;font-size:13.5px}
+.ghostcard{border:1px dashed var(--line-strong);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--muted)}
+/* themes */
+.theme{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px;min-width:0}
+.theme>.hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.theme>.hd h3{font-family:var(--display);font-size:19px;font-weight:700}
+.theme .story{border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0 0;background:none}
+.att{font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.att[data-a="주목"]{color:var(--down);border-color:var(--down)} .att[data-a="추적"]{color:var(--accent);border-color:var(--accent)} .att[data-a="휴면"]{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 
@@ -344,6 +414,7 @@ svg.map .col{font-size:11px;fill:var(--muted);letter-spacing:.04em}
       <button class="tab" role="tab" id="t-brief" aria-controls="p-brief" aria-selected="true">오늘 브리프</button>
       <button class="tab" role="tab" id="t-ind" aria-controls="p-ind" aria-selected="false">지표<span class="n" id="n-ind"></span></button>
       <button class="tab" role="tab" id="t-stories" aria-controls="p-stories" aria-selected="false">큰 이야기<span class="n" id="n-stories"></span></button>
+      <button class="tab" role="tab" id="t-explore" aria-controls="p-explore" aria-selected="false">탐구<span class="n" id="n-explore"></span></button>
       <button class="tab" role="tab" id="t-trends" aria-controls="p-trends" aria-selected="false">트렌드 장부<span class="n" id="n-trends"></span></button>
       <button class="tab" role="tab" id="t-slow" aria-controls="p-slow" aria-selected="false">느린 변수</button>
       <button class="tab" role="tab" id="t-pred" aria-controls="p-pred" aria-selected="false">예측<span class="n" id="n-pred"></span></button>
@@ -357,6 +428,7 @@ svg.map .col{font-size:11px;fill:var(--muted);letter-spacing:.04em}
   <section role="tabpanel" id="p-brief" aria-labelledby="t-brief"></section>
   <section role="tabpanel" id="p-ind" aria-labelledby="t-ind" hidden></section>
   <section role="tabpanel" id="p-stories" aria-labelledby="t-stories" hidden></section>
+  <section role="tabpanel" id="p-explore" aria-labelledby="t-explore" hidden></section>
   <section role="tabpanel" id="p-trends" aria-labelledby="t-trends" hidden></section>
   <section role="tabpanel" id="p-slow" aria-labelledby="t-slow" hidden></section>
   <section role="tabpanel" id="p-pred" aria-labelledby="t-pred" hidden></section>
@@ -373,7 +445,7 @@ const FIELDS = {
 const STAGES = ["태동","성장","성숙","쇠퇴"];
 const FLAG = {new:"NEW", surprise:"예상 밖", linked:"연결"};
 
-const S = { briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
+const S = { themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = id => document.getElementById(id);
@@ -394,6 +466,118 @@ function selectTab(id){
 tabs.forEach(t=>t.addEventListener("click",()=>selectTab(t.id)));
 try{ const saved=localStorage.getItem("td-tab"); if(saved && $(saved)) selectTab(saved); }catch(e){}
 
+/* ---------- v2 shared ---------- */
+function themeName(id){ const t=(S.themes||[]).find(x=>x.id===id); return t?t.name:(id||""); }
+function lastUpd(s){ return [...(s.updates||[])].map(u=>u.date||"").sort().pop()||s.updated||""; }
+function daysSince(d){ if(!d) return 999; return Math.round((new Date(today()+"T12:00:00")-new Date(String(d).slice(0,10)+"T12:00:00"))/864e5); }
+function attention(s){
+  if(s.attention) return s.attention;
+  if(s.status==="종료") return "휴면";
+  const d=daysSince(lastUpd(s));
+  if(d>14) return "휴면";
+  if(d<=7 && (s.status==="확전"||(s.level||0)>=4)) return "주목";
+  return "추적";
+}
+const linkOr = (u,t) => safeUrl(u)?`<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>`:t;
+function deepHtml(d,{kind="deep"}={}){
+  const q=d.qc||{}; const src=d.sources||{};
+  return `<article class="di" ${d.issue?`id="di-${esc(d.issue)}"`:""}>
+    <div class="kicker">${d.theme?`<span class="kchip theme">${esc(themeName(d.theme))}</span>`:""}
+      ${(d.forces||[]).length?`<span class="kchip">느린 변수: ${esc(d.forces.map(slowName).join("·"))}</span>`:""}
+      ${d.update_of?`<span class="kchip">업데이트 · 처음 ${esc(d.update_of)}</span>`:""}
+      ${d.bank_days!=null?`<span class="kchip">뱅크 대기 ${esc(d.bank_days)}일${d.score!=null?` · 점수 ${esc(d.score)}`:""}</span>`:""}</div>
+    <p class="q">${esc(d.q)}</p>
+    ${d.conclusion?`<div class="verdict"><span class="label">결론 먼저</span><p>${esc(d.conclusion)}</p>
+      ${(d.confidence||[]).length?`<div class="confs">${d.confidence.map(c=>`<span>${esc(c.label)} <b>${Math.round((c.p||0)*100)}%</b></span>`).join("")}</div>`:""}</div>`:""}
+    ${d.background?`<div class="part"><span class="label">배경</span><p>${esc(d.background)}</p></div>`:""}
+    ${d.built?`<div class="part"><span class="label">무슨 일이 쌓였나</span><p>${esc(d.built)}</p></div>`:""}
+    ${d.mechanism?`<div class="part"><span class="label">메커니즘</span><p>${esc(d.mechanism)}</p></div>`:""}
+    ${(d.disputes||[]).length?`<div class="part"><span class="label">전문가들이 갈리는 지점</span>
+      ${d.disputes.map((x,i)=>`<div class="issue"><h4>쟁점 ${i+1}. ${esc(x.title)}</h4>
+        <div class="vs">${["a","b"].filter(k=>x[k]).map(k=>`<div class="side ${k}"><span class="who">${esc(x[k].who)}</span><p>${esc(x[k].claim)}</p><span class="ssrc">${linkOr(x[k].url,esc(x[k].src||"원문"))}</span></div>`).join("")}</div>
+        ${x.call?`<p class="call">${esc(x.call)}</p>`:""}</div>`).join("")}</div>`:""}
+    ${(d.scenarios||[]).length?`<div class="part"><span class="label">시나리오</span><div class="scen">${d.scenarios.map(s=>`<div><b>${esc(s.name)}</b>${s.p!=null?` <span class="mono">${Math.round(s.p*100)}%</span>`:""}<br>${esc(s.text||"")}${s.signals?`<br><span class="muted">신호: ${esc(s.signals)}</span>`:""}</div>`).join("")}</div></div>`:""}
+    ${(d.verdict||[]).length?`<div class="part"><span class="label">판정과 이해관계</span><ul class="plain">${d.verdict.map(v=>`<li>${esc(v)}</li>`).join("")}</ul></div>`:""}
+    ${(d.falsifiers||[]).length?`<div class="part"><span class="label">틀렸다고 알 수 있는 신호</span><ol>${d.falsifiers.map(v=>`<li>${esc(v)}</li>`).join("")}</ol></div>`:""}
+    ${(d.for_me||[]).length?`<div class="part me"><span class="label">나에게</span>${d.for_me.map(m=>`<div><b>${esc(m.label)}</b> ${esc(m.text)}</div>`).join("")}</div>`:""}
+    ${(d.predictions||[]).length?`<div class="part"><span class="label">등록한 예측</span><ul class="plain">${d.predictions.map(p=>{const x=S.preds.find(z=>z.id===p); return `<li>${esc(x?x.statement:p)}</li>`;}).join("")}</ul></div>`:""}
+    <div class="qc">${q.news!=null?`<span class="ok">뉴스 ${esc(q.news)}건</span>`:""}${q.analyses!=null?`<span class="ok">분석 ${esc(q.analyses)}건 본문 확인</span>`:""}${q.disputes!=null?`<span class="ok">대립 쟁점 ${esc(q.disputes)}개</span>`:""}${q.indicators!=null?`<span class="ok">지표 검증 ${esc(q.indicators)}개</span>`:""}</div>
+    ${(src.analyses||[]).length||(src.news||[]).length?`<details class="more"><summary>출처 · 읽은 분석 ${(src.analyses||[]).length}건, 뉴스 ${(src.news||[]).length}건</summary><div class="srcs">
+      ${(src.analyses||[]).length?`<div><span class="label">전문가 분석 (본문 확인)</span><ol>${src.analyses.map(a=>`<li>${esc(a.author)}, "${esc(a.title)}", ${esc(a.outlet)}, ${esc(a.date)}${a.note?` (${esc(a.note)})`:""} · ${linkOr(a.url,"원문")}</li>`).join("")}</ol></div>`:""}
+      ${(src.news||[]).length?`<div><span class="label">뉴스·데이터</span><ol>${src.news.map(a=>`<li>${esc(a.outlet)}, ${esc(a.title)}, ${esc(a.date)} · ${linkOr(a.url,"원문")}</li>`).join("")}</ol></div>`:""}
+      ${(src.indicators||[]).length?`<div><span class="label">대 본 지표</span> ${src.indicators.map(id=>{const x=S.inds.find(z=>z.id===id); return x?`<button class="chip" data-gojump="${esc(id)}">${esc(x.name.replace(/\(.*\)/,"").trim())}</button>`:"";}).join(" ")}</div>`:""}
+    </div></details>`:""}
+  </article>`;
+}
+function weatherHtml(){
+  if(!S.inds.length) return "";
+  const gs=gaugeCalc(); const pick=id=>S.inds.find(x=>x.id===id);
+  const cell=(id,lab,unit)=>{ const x=pick(id); if(!x) return ""; const a=analyze(x); if(!a.last) return "";
+    return `<div><span class="k">${esc(lab)}</span><span class="v">${fmt(a.last[1])}${esc(unit)}</span><span class="d">${a.change!=null?fmtChg(a.change,x.unit):""} · ${esc(a.last[0].slice(5))}</span></div>`; };
+  return `<div class="wx" aria-label="세계 날씨">
+    ${Object.entries(GAUGES).map(([k,G])=>`<div><span class="k">${G.name}</span><span class="v" data-l="${esc(gs[k].level)}">${esc(gs[k].level)}</span><span class="d">${gs[k].score!=null?gs[k].score+"/100":""}</span></div>`).join("")}
+    ${cell("ust10y","미 10년물","%")}${cell("brent","브렌트유","")}${cell("oat_bund","프랑스–독일","bp")}</div>`;
+}
+function bankHtml(){
+  const w=(S.issues||[]).filter(x=>x.status==="waiting").sort((a,b)=>(b.score||0)-(a.score||0));
+  if(!w.length) return "";
+  return `<div class="layer"><div class="layerhead"><h2>대기 중인 이슈</h2><span class="label">이슈 뱅크 상위 ${Math.min(5,w.length)} / ${w.length}</span></div>
+    <div class="bank">${w.slice(0,5).map(x=>{ const na=(x.analyses||[]).length; const ready=na>=3;
+      return `<div class="brow"><span class="sc">${esc(x.score??"–")}</span><div class="t">${esc(x.q)}<div class="m">${esc(themeName(x.theme))} · 근거 뉴스 ${(x.news||[]).length} · 대기 ${daysSince(x.first_seen)}일</div></div><span class="need ${ready?"ready":"wait"}">${ready?"조건 충족":`분석 ${na}/3`}</span></div>`; }).join("")}</div>
+    <p class="note" style="margin:0">분석 3건 이상과 서로 다른 입장이 모이면 깊은 이슈로 올라갑니다. 점수는 파급력, 새 신호, 의견 갈림, 나와의 관련도, 방향 전환, 다가오는 결정일로 매깁니다.</p></div>`;
+}
+const SEL_ORDER=[["world","세계"],["us","미국"],["tech","기술·AI"],["food","식음료·소비"],["korea","한국"]];
+function renderBriefV2(p,b,i){
+  const sel=b.selected||[], scan=b.scan||[], di=b.deep_issues||[];
+  p.innerHTML = `
+  <div class="datebar">
+    <button class="iconbtn" id="bprev" aria-label="이전 날" ${i>=S.briefs.length-1?"disabled":""}>‹</button>
+    <select id="bsel" aria-label="브리프 날짜">${S.briefs.map((x,k)=>`<option value="${k}" ${k===i?"selected":""}>${fmtDate(x.date)}${x.date===today()?" · 오늘":""}</option>`).join("")}</select>
+    <button class="iconbtn" id="bnext" aria-label="다음 날" ${i<=0?"disabled":""}>›</button>
+  </div>
+  <div class="slip">
+    <div class="meta"><span>훑음 <b>${esc(b.scanned ?? scan.length)}</b></span><span>선별 <b>${sel.length}</b></span><span>깊은 이슈 <b>${di.length}</b></span>${b.generated_at?`<span>작성 ${esc(String(b.generated_at).slice(11,16))}</span>`:""}</div>
+    <h1 class="headline">${esc(b.headline||"")}</h1>
+    ${b.explore_note?`<button class="storylink" id="goexplore">이번 주 탐구 ${esc(b.explore_note)} ›</button>`:""}
+    ${i===0?weatherHtml():""}
+  </div>
+  ${b.force_note&&b.force_note.text?`<div class="layer"><div class="layerhead"><h2>${esc(b.force_note.title||"이번 주 큰 힘")}</h2><span class="label">느린 변수 · 주간</span></div>
+    <p style="margin:0">${esc(b.force_note.text)}</p>${forceChips(b.force_note.forces)}</div>`:""}
+  <div class="layer"><div class="layerhead"><h2>${b.weekly_split?"이번 주 전문가들이 가장 갈린 질문":"오늘의 깊은 이슈"}</h2><span class="label">여러 뉴스 + 전문가 분석을 엮은 판단</span></div>
+    ${di.length?di.map(d=>deepHtml(d)).join(""):`<div class="ghostcard">오늘은 조건(분석 3건 이상, 서로 다른 입장)을 채운 이슈가 없어 깊은 이슈를 올리지 않았습니다. 후보는 아래 대기 목록에 있습니다.</div>`}
+    ${b.deep_note?`<p class="note" style="margin:0">${esc(b.deep_note)}</p>`:""}
+  </div>
+  ${i===0?bankHtml():""}
+  ${(b.theme_board||[]).length?`<div class="layer"><div class="layerhead"><h2>테마 현황</h2><span class="label">오늘 움직임 · 누르면 큰 이야기로</span></div>
+    <div class="tboard">${b.theme_board.map(t=>`<button class="trow" data-theme="${esc(t.theme)}"><span class="mv" data-m="${esc(t.move||"flat")}">${{up:"▲",down:"▼"}[t.move]||"―"}</span><span class="nm">${esc(themeName(t.theme))}</span><span class="ln">${esc(t.line||"")}</span></button>`).join("")}</div></div>`:""}
+  ${sel.length?`<div class="layer"><div class="layerhead"><h2>선별 뉴스</h2><span class="label">${sel.length}건 · 세계 → 미국 → 기술 → 식음료 → 한국</span></div>
+    ${SEL_ORDER.map(([k,n])=>{ const xs=sel.filter(s=>s.field===k); return xs.length?`<div class="sel"><span class="label">${n}</span><ul class="news">${xs.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:`<span style="font-weight:500">${esc(s.title)}</span>`}${s.why?`<span class="w">${esc(s.why)}</span>`:""}<span class="s">${esc(s.source||"")}${s.theme?` · ${esc(themeName(s.theme))}`:""}</span></li>`).join("")}</ul></div>`:""; }).join("")}
+    ${(()=>{ const other=sel.filter(s=>!SEL_ORDER.some(([k])=>k===s.field)); return other.length?`<div class="sel"><span class="label">기타</span><ul class="news">${other.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:esc(s.title)}${s.why?`<span class="w">${esc(s.why)}</span>`:""}<span class="s">${esc(s.source||"")}</span></li>`).join("")}</ul></div>`:""; })()}
+  </div>`:""}
+  ${scan.length?`<details class="more"><summary>전체 훑기 ${scan.length}건 · 제목과 링크만</summary><ul class="scan">${scan.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:esc(s.title)} <span class="muted">· ${esc(s.source||"")}</span></li>`).join("")}</ul></details>`:""}
+  ${(b.counter||[]).length?`<details class="more"><summary>반대 신호 ${b.counter.length}건 · 채택한 트렌드에 반하는 증거</summary><div class="counter" style="margin-top:8px">${b.counter.map(c=>`<div class="c">${c.trend&&trendName(c.trend)?`<div class="label" style="margin-bottom:4px">${esc(trendName(c.trend))}</div>`:""}${esc(c.text)}${safeUrl(c.url)?` <a href="${esc(c.url)}" target="_blank" rel="noopener">원문</a>`:""}</div>`).join("")}</div></details>`:""}
+  ${renderCandidatesFor(b.date)}`;
+  $("bsel").onchange=e=>{S.briefIdx=+e.target.value; renderBrief();};
+  $("bprev").onclick=()=>{S.briefIdx=i+1; renderBrief();};
+  $("bnext").onclick=()=>{S.briefIdx=i-1; renderBrief();};
+  if($("goexplore")) $("goexplore").onclick=()=>selectTab("t-explore");
+  p.querySelectorAll("[data-theme]").forEach(x=>x.onclick=()=>{ selectTab("t-stories"); const el=$("th-"+x.dataset.theme); if(el) el.scrollIntoView({block:"start"}); });
+  p.querySelectorAll("[data-gojump]").forEach(x=>x.onclick=()=>{ selectTab("t-ind"); const card=$("ind-"+x.dataset.gojump); if(card){ const g=card.closest("details.group"); if(g) g.open=true; card.scrollIntoView({block:"start"}); } });
+  wireForces(p); wireTrendButtons(p);
+}
+/* ---------- explore (Monday) ---------- */
+function renderExplore(){
+  const p=$("p-explore"); if(!p) return;
+  const xs=[...(S.explores||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(a.order||0)-(b.order||0));
+  const weeks=[...new Set(xs.map(x=>x.date))];
+  $("n-explore").textContent = weeks.length?xs.filter(x=>x.date===weeks[0]).length:"";
+  p.innerHTML = `<div class="sectionhead"><h2>탐구</h2><span class="label">매주 월요일 · 분석 5건 이상, 입장 3개 이상</span></div>
+  <p class="note" style="margin:0">월요일 아침, 이슈 뱅크에서 몇 주째 대기 중인 높은 점수 이슈와 1~3년 단위의 구조적 질문을 골라 시간을 들여 씁니다. 시나리오와 예측까지 남기고, 주차별로 쌓입니다.</p>
+  ${weeks.length?weeks.map((w,k)=>`<details class="more" ${k===0?"open":""}><summary>${fmtDate(w)} 주 · ${xs.filter(x=>x.date===w).length}편</summary><div style="display:grid;gap:16px;margin-top:10px">${xs.filter(x=>x.date===w).map(x=>deepHtml(x,{kind:"explore"})).join("")}</div></details>`).join("")
+  :`<div class="empty"><h3>첫 탐구는 다음 월요일 아침에 올라옵니다</h3><p class="muted" style="margin:0">이슈 뱅크에서 2~3개를 골라 배경, 메커니즘, 전문가 비교, 시나리오, 예측까지 정리합니다.</p></div>`}`;
+  wireForces(p);
+}
+
 /* ---------- brief ---------- */
 function renderBrief(){
   const p=$("p-brief");
@@ -403,6 +587,7 @@ function renderBrief(){
     return;
   }
   const i=Math.min(S.briefIdx,S.briefs.length-1), b=S.briefs[i];
+  if(b.deep_issues||b.selected){ renderBriefV2(p,b,i); return; }
   const deep=b.deep||[], items=b.items||[];
   const counts={}; items.forEach(it=>counts[it.field]=(counts[it.field]||0)+1);
   const shown = S.fieldFilter==="all" ? items : items.filter(it=>it.field===S.fieldFilter);
@@ -602,12 +787,12 @@ function gaugeCalc(){
 const MAP={cols:["원인","1차 충격","물가·금리","2차 파급","내 시장"],
   nodes:[["iran-war-hormuz",0,0,"이란 전쟁·호르무즈",1],["politics",0,1.3,"자국주의·양극화","slow"],["personal-ai-agents",0,2.6,"AI 에이전트 붐",1],
     ["brent",1,0],["shipping",1,0.85],["us_tariff",1,1.6],["bigtech_capex",1,2.4],["dram",1,3.4],
-    ["cpi",2,0],["fao",2,1],["fedfunds",2,1.9],["sp500",2,3],
+    ["cpi",2,0],["fao",2,0.85],["fedfunds",2,1.7],["global_10y",2,2.5],["sp500",2,3.3],
     ["ust10y",3,0.6],["dxy",3,1.6],["kr_exports",3,2.6],["kospi",3,3.5],
     ["mortgage30",4,0],["sf_caprate",4,0.9],["restaurant_sales",4,1.8],["usdkrw",4,2.7],["sf_rent",4,3.6]],
   edges:[["iran-war-hormuz","brent"],["iran-war-hormuz","shipping"],["brent","cpi"],["shipping","fao"],["fao","cpi"],["cpi","fedfunds"],["fedfunds","ust10y"],["ust10y","mortgage30"],["ust10y","sf_caprate"],["cpi","restaurant_sales"],["fedfunds","dxy"],["dxy","usdkrw"],
     ["personal-ai-agents","bigtech_capex"],["bigtech_capex","dram"],["bigtech_capex","sp500"],["dram","kr_exports"],["kr_exports","kospi"],["kospi","usdkrw"],["bigtech_capex","sf_rent"],
-    ["politics","us_tariff"],["us_tariff","cpi"],["us_tariff","fao"],["politics","ust10y"],["politics","sf_rent"],["us_tariff","dxy"]]};
+    ["politics","us_tariff"],["us_tariff","cpi"],["us_tariff","fao"],["politics","ust10y"],["politics","sf_rent"],["us_tariff","dxy"],["politics","global_10y"],["global_10y","ust10y"],["global_10y","usdkrw"]]};
 function renderMap(){
   const W=900,H=330,cw=W/5,bw=150,bh=34;
   const pos={}; MAP.nodes.forEach(([id,c,r])=>pos[id]={x:c*cw+(cw-bw)/2,y:40+r*66});
@@ -620,7 +805,7 @@ function renderMap(){
 }
 function renderIndicators(){
   const p=$("p-ind");
-  if(!S.inds.length){ p.innerHTML=`<div class="empty"><h3>지표를 불러오는 중</h3><p class="muted" style="margin:0">세계를 읽는 34개 지표가 여기에 정리됩니다.</p></div>`; return; }
+  if(!S.inds.length){ p.innerHTML=`<div class="empty"><h3>지표를 불러오는 중</h3><p class="muted" style="margin:0">세계를 읽는 지표가 여기에 정리됩니다.</p></div>`; return; }
   const day=S.indDay||{}, gs=gaugeCalc();
   const abnormal=S.inds.filter(x=>analyze(x).state==="이례적");
   $("n-ind").textContent = abnormal.length||"";
@@ -687,29 +872,43 @@ function forceChips(ids){ ids=(ids||[]).filter(Boolean); return ids.length?`<div
 function wireForces(p){ p.querySelectorAll("[data-force]").forEach(b=>b.onclick=()=>{ selectTab("t-slow"); const el=$("sv-"+b.dataset.force); if(el){ el.classList.add("hl"); el.scrollIntoView({block:"center"}); } }); }
 function storyName(id){ const s=S.stories.find(x=>x.id===id); return s ? s.title : null; }
 const SORDER={"확전":0,"진행":1,"진정":2,"종료":3};
+function storyHtml(s){
+  const ups=[...(s.updates||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const lvl=Math.max(0,Math.min(5,s.level||0)); const at=attention(s);
+  return `<article class="story">
+    <div class="head"><span class="att" data-a="${at}">${at}</span><span class="sstat" data-s="${esc(s.status||"진행")}">${esc(s.status||"진행")}</span>
+      <span class="lvl" title="파급력 ${lvl}/5" aria-label="파급력 ${lvl}/5">${[1,2,3,4,5].map(n=>`<i class="${n<=lvl?"on":""}"></i>`).join("")}</span>
+      <span class="reg muted" style="font-size:12px">${esc(s.region||"")}${s.started?` · ${esc(s.started)}부터`:""}</span></div>
+    <h3>${esc(s.title)}</h3>
+    ${forceChips(s.forces)}
+    ${s.summary?`<div>${esc(s.summary)}</div>`:""}
+    ${s.second_order?`<dl class="grid"><dt>2차 효과</dt><dd>${esc(s.second_order)}</dd>${s.opportunities?`<dt>기회 경로</dt><dd>${esc(s.opportunities)}</dd>`:""}${s.watch?`<dt>지켜볼 지표</dt><dd>${esc(s.watch)}</dd>`:""}</dl>`:""}
+    ${ups.length?`<details class="more" id="sty-${esc(s.id)}"><summary>경과 ${ups.length}건 · 최근 ${esc(ups[0].date||"")}</summary>
+      <ul class="timeline">${ups.slice(0,40).map(u=>`<li><span class="d">${esc(u.date)}</span>${esc(u.text)}${safeUrl(u.url)?` <a href="${esc(u.url)}" target="_blank" rel="noopener">원문</a>`:""}</li>`).join("")}</ul></details>`:""}
+    <div class="mono muted" style="font-size:11.5px">갱신 ${esc((s.updated||"").slice(0,10))}</div>
+  </article>`;
+}
+const AORDER={"주목":0,"추적":1,"휴면":2};
 function renderStories(){
   const p=$("p-stories");
-  const list=[...S.stories].sort((a,b)=>(SORDER[a.status]??9)-(SORDER[b.status]??9) || (b.level||0)-(a.level||0));
+  const list=[...S.stories].sort((a,b)=>(AORDER[attention(a)]-AORDER[attention(b)]) || (SORDER[a.status]??9)-(SORDER[b.status]??9) || (b.level||0)-(a.level||0));
   const live=list.filter(s=>s.status!=="종료");
   $("n-stories").textContent = live.length||"";
+  const themes=[...(S.themes||[])].sort((a,b)=>(a.order||99)-(b.order||99));
+  const known=new Set(themes.map(t=>t.id));
+  const groups=themes.map(t=>({t,xs:list.filter(s=>s.theme===t.id)})).filter(g=>g.xs.length);
+  const rest=list.filter(s=>!known.has(s.theme));
+  if(rest.length) groups.push({t:{id:"etc",name:themes.length?"기타":"진행 중인 큰 이야기",sub:""},xs:rest});
+  const block=g=>{ const awake=g.xs.filter(s=>attention(s)!=="휴면"), sleep=g.xs.filter(s=>attention(s)==="휴면");
+    const hot=g.xs.filter(s=>attention(s)==="주목").length;
+    return `<section class="theme" id="th-${esc(g.t.id)}"><div class="hd"><h3>${esc(g.t.name)}</h3><span class="mono muted" style="font-size:12px">이야기 ${g.xs.length}${hot?` · 주목 ${hot}`:""}</span></div>
+      ${g.t.sub?`<p class="note" style="margin:0">${esc(g.t.sub)}</p>`:""}
+      ${awake.map(storyHtml).join("")}
+      ${sleep.length?`<details class="more"><summary>휴면 ${sleep.length}건 · 2주 넘게 새 소식 없음</summary>${sleep.map(storyHtml).join("")}</details>`:""}</section>`; };
   p.innerHTML = `
-  <div class="sectionhead"><h2>진행 중인 큰 이야기</h2><span class="label">몇 주에서 몇 년 가는 사건</span></div>
-  <p class="note" style="margin:0">전쟁, 전염병, 주거 위기처럼 오래 이어지며 나중에 트렌드를 만드는 사건입니다. 매일 바뀐 점이 한 줄씩 쌓이고, 일요일마다 2차 효과와 기회 경로를 갱신합니다.</p>
-  ${list.length?list.map(s=>{
-    const ups=[...(s.updates||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-    const lvl=Math.max(0,Math.min(5,s.level||0));
-    return `<article class="story">
-      <div class="head"><span class="sstat" data-s="${esc(s.status||"진행")}">${esc(s.status||"진행")}</span>
-        <span class="lvl" title="파급력 ${lvl}/5" aria-label="파급력 ${lvl}/5">${[1,2,3,4,5].map(n=>`<i class="${n<=lvl?"on":""}"></i>`).join("")}</span>
-        <span class="reg muted" style="font-size:12px">${esc(s.region||"")}${s.started?` · ${esc(s.started)}부터`:""}</span></div>
-      <h3>${esc(s.title)}</h3>
-      ${forceChips(s.forces)}
-      ${s.summary?`<div>${esc(s.summary)}</div>`:""}
-      ${s.second_order?`<dl class="grid"><dt>2차 효과</dt><dd>${esc(s.second_order)}</dd>${s.opportunities?`<dt>기회 경로</dt><dd>${esc(s.opportunities)}</dd>`:""}${s.watch?`<dt>지켜볼 지표</dt><dd>${esc(s.watch)}</dd>`:""}</dl>`:""}
-      ${ups.length?`<details class="more" id="sty-${esc(s.id)}"><summary>경과 ${ups.length}건 · 최근 ${esc(ups[0].date||"")}</summary>
-        <ul class="timeline">${ups.slice(0,40).map(u=>`<li><span class="d">${esc(u.date)}</span>${esc(u.text)}${safeUrl(u.url)?` <a href="${esc(u.url)}" target="_blank" rel="noopener">원문</a>`:""}</li>`).join("")}</ul></details>`:""}
-      <div class="mono muted" style="font-size:11.5px">갱신 ${esc((s.updated||"").slice(0,10))}</div>
-    </article>`;}).join("")
+  <div class="sectionhead"><h2>큰 이야기</h2><span class="label">테마 ${themes.length} · 이야기 ${list.length}</span></div>
+  <p class="note" style="margin:0">오래 이어지며 나중에 트렌드를 만드는 사건을 테마별로 묶었습니다. 주목은 이번 주 크게 움직인 것, 추적은 진행 중이지만 조용한 것, 휴면은 2주 넘게 새 소식이 없어 접어둔 것입니다. 새 소식이 오면 다시 깨어납니다.</p>
+  ${list.length?groups.map(block).join("")
   :`<div class="empty"><h3>추적 중인 이야기가 없습니다</h3><p class="muted" style="margin:0">매일 수집 중 큰 사건이 등장하면 여기에 등록되고 경과가 쌓입니다.</p></div>`}`;
   wireForces(p);
 }
@@ -931,7 +1130,7 @@ function renderSync(){
   el.innerHTML = `로컬 <b>${esc(S.sync.last_synced_date.slice(5))}</b>까지${pending?` · 대기 ${pending}일`:""}`;
 }
 
-function renderAll(){ renderBrief(); renderIndicators(); renderStories(); renderTrends(); renderSlow(); renderPreds(); renderSignals(); renderSync(); }
+function renderAll(){ renderBrief(); renderIndicators(); renderStories(); renderExplore(); renderTrends(); renderSlow(); renderPreds(); renderSignals(); renderSync(); }
 renderAll();
 
 /* ---------- data ---------- */
@@ -950,13 +1149,16 @@ renderAll();
     renderBrief(); renderSync();
   }, err);
   db.collection("stories").onSnapshot(s=>{ S.stories=docs(s); renderStories(); renderBrief(); }, err);
+  db.collection("themes").onSnapshot(s=>{ S.themes=docs(s); renderStories(); renderBrief(); }, err);
+  db.collection("issues").onSnapshot(s=>{ S.issues=docs(s); renderBrief(); }, err);
+  db.collection("explorations").onSnapshot(s=>{ S.explores=docs(s); renderExplore(); }, err);
   const keepOpen=fn=>{ const p=$("p-ind"); const og=[...p.querySelectorAll("details.group[open]")].map(d=>d.dataset.group); const ob=[...p.querySelectorAll("details.back[open]")].map(d=>(d.closest(".moved")?".moved ":"details.group ")+`details.back[data-ind="${d.dataset.ind}"]`); fn(); og.forEach(g=>{const d=p.querySelector(`details.group[data-group="${g}"]`); if(d) d.open=true;}); ob.forEach(sel=>p.querySelectorAll(sel).forEach(d=>d.open=true)); };
-  db.collection("indicators").onSnapshot(s=>{ S.inds=docs(s); keepOpen(renderIndicators); }, err);
+  db.collection("indicators").onSnapshot(s=>{ S.inds=docs(s); keepOpen(renderIndicators); renderBrief(); }, err);
   db.doc("meta/indicator_groups").onSnapshot(d=>{ S.indGroups=d.exists?(d.data().groups||[]):[]; keepOpen(renderIndicators); }, err);
   db.doc("meta/indicators_day").onSnapshot(d=>{ S.indDay=d.exists?d.data():null; keepOpen(renderIndicators); }, err);
   db.collection("trends").onSnapshot(s=>{ S.trends=docs(s); renderTrends(); renderBrief(); }, err);
-  db.collection("slow_vars").onSnapshot(s=>{ S.slow=docs(s); renderSlow(); renderStories(); renderTrends(); }, err);
-  db.collection("predictions").onSnapshot(s=>{ S.preds=docs(s); renderPreds(); }, err);
+  db.collection("slow_vars").onSnapshot(s=>{ S.slow=docs(s); renderSlow(); renderStories(); renderTrends(); renderBrief(); renderExplore(); }, err);
+  db.collection("predictions").onSnapshot(s=>{ S.preds=docs(s); renderPreds(); renderExplore(); }, err);
   if(window.TD_VAULT){ window.TD_VAULT.onUnlock=()=>startPrivate(db,"me"); if(window.TD_VAULT.unlocked) startPrivate(db,"me"); else renderPrivate(); }
   else { const user=await window.claude?.use?.("user"); const uid=user?await user.id():null; if(uid) startPrivate(db,uid); else { S.priv.status="noid"; renderPrivate(); } }
   db.doc("meta/sync").onSnapshot(d=>{ S.sync = d.exists ? d.data() : null; renderSync(); }, err);

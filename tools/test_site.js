@@ -35,11 +35,17 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     await tab(p, 't-mine'); ok(await p.isVisible('#unlockform'), N + ': vault lock form missing');
     // brief
     await tab(p, 't-brief');
-    ok((await p.$$('#p-brief .card')).length >= 3, N + ': brief deep cards missing');
-    ok((await p.$$('#p-brief ul.items li')).length >= 10, N + ': brief items missing');
+    // newest brief uses the v2 layout: deep issue, bank, theme board, selected news
+    ok((await p.$$('#p-brief .di')).length >= 1, N + ': deep issue missing');
+    ok((await p.$$('#p-brief .di .side')).length >= 4, N + ': expert sides missing');
+    ok((await p.$$('#p-brief .brow')).length >= 3, N + ': issue bank missing');
+    ok((await p.$$('#p-brief .trow')).length >= 4, N + ': theme board missing');
+    ok((await p.$$('#p-brief ul.news li')).length >= 10, N + ': selected news missing');
+    ok((await p.$$('#p-brief .wx > div')).length >= 4, N + ': weather missing');
     ok(!(await p.textContent('#p-brief')).includes('불러오는 중'), N + ': brief stuck loading');
     const nOpts = await p.$$eval('#bsel option', o => o.length); ok(nOpts >= 4, N + ': date options');
     await p.click('#bprev'); await p.waitForTimeout(100);
+    ok((await p.$$('#p-brief .card')).length >= 3, N + ': old-format brief cards missing');
     ok((await p.$eval('#bsel', s => s.value)) === '1', N + ': prev date did not move');
     await p.click('#bnext'); await p.waitForTimeout(100);
     await p.selectOption('#bsel', String(nOpts - 1)); await p.waitForTimeout(100);
@@ -51,11 +57,11 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     // indicators
     await tab(p, 't-ind');
     ok((await p.$$('#p-ind .gauge')).length === 3, N + ': gauges');
-    ok((await p.$$('#p-ind .moved .icard')).length >= 1, N + ': moved cards');
+    ok((await p.$$('#p-ind .moved .icard')).length >= 1 || /크게 움직인 지표가 없습니다/.test(await p.textContent('#p-ind')), N + ': moved cards');
     ok((await p.$$('#p-ind details.group')).length === 10, N + ': 10 question groups');
     const empty = await p.$$eval('#p-ind details.group .icard', cs => cs.filter(c => /값 수집 중|값을 모으는 중/.test(c.textContent)).map(c => c.id));
     ok(empty.length === 0, N + ': indicators without data: ' + empty.join(','));
-    const nCards = await p.$$eval('#p-ind details.group .icard', cs => cs.length); ok(nCards === 38, N + ': library cards = ' + nCards);
+    const nCards = await p.$$eval('#p-ind details.group .icard', cs => cs.length); ok(nCards === 40, N + ': library cards = ' + nCards);
     const calc = await p.$$eval('#p-ind details.group .icard', cs => cs.filter(c => !c.textContent.includes('어떻게 계산되나')).map(c => c.id));
     ok(calc.length === 0, N + ': missing how_calc: ' + calc.join(','));
     // open every group, flip a period, jump via map + related chip
@@ -69,13 +75,20 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     const chip = p.locator('#p-ind [data-jump]:visible').first(); ok(await chip.count() === 1, N + ': related chip'); if (await chip.count()) { await chip.click(); await p.waitForTimeout(400); }
     // nationalism layer: closing group, map nodes, force chips, driver names
     ok((await p.$$('#p-ind details.group[data-group="closing"] .icard')).length === 4, N + ': closing group cards');
-    ok(!!(await p.$('svg.map [data-node="us_tariff"]')) && !!(await p.$('svg.map [data-node="politics"]')), N + ': politics/tariff map nodes');
+    ok(!!(await p.$('svg.map [data-node="global_10y"]')) && !!(await p.$('svg.map [data-node="us_tariff"]')) && !!(await p.$('svg.map [data-node="politics"]')), N + ': politics/tariff map nodes');
     const nanText = await p.$$eval('#p-ind svg.spark', ss => ss.filter(s => /NaN|undefined/.test(s.outerHTML)).length);
     ok(nanText === 0, N + ': NaN/undefined in charts: ' + nanText);
     ok(await noOverflow(p), N + ': indicators overflow horizontally');
     // story link from indicator -> stories tab
     const sl = p.locator('#p-ind .storylink:visible').first(); if (await sl.count()) { await sl.click(); await p.waitForTimeout(200); ok(await p.isVisible('#p-stories'), N + ': storylink did not switch tab'); }
-    // stories
+    // stories grouped by theme
+    await tab(p, 't-stories');
+    ok((await p.$$('#p-stories section.theme')).length === 6, N + ': 6 theme blocks');
+    ok((await p.$$('#p-stories .att')).length >= 5, N + ': attention chips');
+    await tab(p, 't-explore');
+    ok(/첫 탐구|주 ·/.test(await p.textContent('#p-explore')), N + ': explore tab');
+    await tab(p, 't-brief'); await p.click('#p-brief .trow'); await p.waitForTimeout(200);
+    ok(await p.isVisible('#p-stories'), N + ': theme row did not open stories');
     await tab(p, 't-stories');
     ok((await p.$$('#p-stories .story')).length >= 5, N + ': stories');
     ok((await p.$$('#p-stories .chip.force')).length >= 5, N + ': force chips');

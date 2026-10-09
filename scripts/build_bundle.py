@@ -7,7 +7,7 @@ Usage: python3 scripts/build_bundle.py <dump_dir> <out_json> [--with-signals]
 import json, os, sys, glob, datetime
 dump, out = sys.argv[1], sys.argv[2]
 with_signals = "--with-signals" in sys.argv
-COLLECTIONS = ["briefs", "stories", "indicators", "trends", "slow_vars", "predictions"] + (["field_signals"] if with_signals else [])
+COLLECTIONS = ["briefs", "stories", "indicators", "trends", "slow_vars", "predictions", "themes", "issues", "explorations"] + (["field_signals"] if with_signals else [])
 META_DOCS = ["indicator_groups", "indicators_day"]
 
 def read(p):
