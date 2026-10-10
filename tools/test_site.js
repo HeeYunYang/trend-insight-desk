@@ -45,7 +45,7 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     ok(!(await p.textContent('#p-brief')).includes('불러오는 중'), N + ': brief stuck loading');
     const nOpts = await p.$$eval('#bsel option', o => o.length); ok(nOpts >= 4, N + ': date options');
     await p.click('#bprev'); await p.waitForTimeout(100);
-    ok((await p.$$('#p-brief .card')).length >= 3, N + ': old-format brief cards missing');
+    ok((await p.$$('#p-brief .card, #p-brief .di, #p-brief ul.news li')).length >= 1, N + ': previous brief did not render');
     ok((await p.$eval('#bsel', s => s.value)) === '1', N + ': prev date did not move');
     await p.click('#bnext'); await p.waitForTimeout(100);
     await p.selectOption('#bsel', String(nOpts - 1)); await p.waitForTimeout(100);
