@@ -42,6 +42,17 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     ok((await p.$$('#p-brief .trow')).length >= 4, N + ': theme board missing');
     ok((await p.$$('#p-brief ul.news li')).length >= 10, N + ': selected news missing');
     ok((await p.$$('#p-brief .wx > div')).length >= 4, N + ': weather missing');
+    // deep issues start collapsed with conclusion visible; toggle opens them
+    ok(await p.locator('#p-brief .di .verdict').first().isVisible(), N + ': conclusion not visible');
+    ok(!(await p.locator('#p-brief .di .di-body').first().isVisible()), N + ': deep issue body should start collapsed');
+    await p.locator('#p-brief details.di-more > summary').first().click(); await p.waitForTimeout(150);
+    ok(await p.locator('#p-brief .di .di-body').first().isVisible(), N + ': deep issue did not open');
+    await p.locator('#p-brief details.di-more > summary').first().click(); await p.waitForTimeout(100);
+    ok((await p.$$('#p-brief .qnav a')).length >= 3, N + ': quick nav missing');
+    await p.locator('#p-brief .qnav a').last().click(); await p.waitForTimeout(600);
+    ok(await p.evaluate(() => window.scrollY > 300), N + ': quick nav did not scroll');
+    ok(await p.isVisible('#totop'), N + ': top button not shown after scrolling');
+    await p.click('#totop'); await p.waitForTimeout(700);
     ok(!(await p.textContent('#p-brief')).includes('불러오는 중'), N + ': brief stuck loading');
     const nOpts = await p.$$eval('#bsel option', o => o.length); ok(nOpts >= 4, N + ': date options');
     await p.click('#bprev'); await p.waitForTimeout(100);
@@ -92,6 +103,10 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     await tab(p, 't-stories');
     ok((await p.$$('#p-stories .story')).length >= 5, N + ': stories');
     ok((await p.$$('#p-stories .chip.force')).length >= 5, N + ': force chips');
+    // stories start collapsed: summary visible, body hidden
+    ok(await p.locator('#p-stories details.story > summary').first().isVisible(), N + ': story summary hidden');
+    ok(!(await p.locator('#p-stories details.story .sbody').first().isVisible()), N + ': story body should start collapsed');
+    await p.$$eval('#p-stories details.story', ds => ds.forEach(d => d.open = true));
     const fc = p.locator('#p-stories .chip.force', { hasText: '자국주의' }).first();
     if (await fc.count()) { await fc.click(); await p.waitForTimeout(200); ok(await p.isVisible('#sv-politics'), N + ': force chip -> slow row'); } else ok(false, N + ': politics chip missing');
     await tab(p, 't-stories');
