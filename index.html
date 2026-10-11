@@ -306,6 +306,18 @@ svg.map .col{font-size:13px;fill:var(--muted);letter-spacing:.04em}
 .brow .m{font-size:13px;color:var(--muted)}
 .need{font-family:var(--mono);font-size:13px;white-space:nowrap;padding:2px 7px;border-radius:4px;border:1px solid var(--line)}
 .need.wait{color:var(--warn);border-color:var(--warn)} .need.ready{color:var(--up);border-color:var(--up)}
+.watch{display:grid;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.wrow{padding:10px 12px;border-top:1px solid var(--line)}
+.wrow:first-child{border-top:0}
+.wrow .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.wrow .ar{font-size:13px;color:var(--f-food);border:1px solid var(--f-food);border-radius:4px;padding:0 6px;white-space:nowrap}
+.wrow .nm{font-weight:600;font-size:15px}
+.wrow .tx{font-size:15px;margin-top:4px}
+.wrow .so{font-size:14px;color:var(--muted);margin-top:4px}
+.wquiet{font-size:15px;color:var(--muted);margin:0}
+.wlist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.wlist li{font-size:14px;border-top:1px solid var(--line);padding-top:8px}
+.wlist .c{color:var(--muted);font-size:13px}
 @media (max-width:480px){.brow{grid-template-columns:36px 1fr}.brow .need{grid-column:2;justify-self:start}}
 .tboard{display:grid;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 .trow{display:grid;grid-template-columns:28px 150px 1fr;gap:10px;padding:10px 12px;border-top:1px solid var(--line);align-items:baseline;cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%}
@@ -344,7 +356,7 @@ ul.scan{margin:8px 0 0;padding-left:18px;display:grid;gap:3px;font-size:14px}
 .qnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:-6px}
 .qnav::-webkit-scrollbar{display:none}
 .qnav a{flex:none;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink);text-decoration:none;background:var(--surface)}
-.anchor,#sec-bank,#sec-theme,#sec-news,.theme{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 108px)}
+.anchor,#sec-bank,#sec-theme,#sec-watch,#sec-news,.theme{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 108px)}
 .di .dtitles{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:15px}
 .di .dtitles .mono{font-size:13px;color:var(--muted);margin-right:4px}
 details.di-more>summary{cursor:pointer;list-style:none;font-size:15px;font-weight:600;color:var(--accent);padding:10px 0;border-top:1px solid var(--line)}
@@ -492,7 +504,7 @@ const FIELDS = {
 const STAGES = ["태동","성장","성숙","쇠퇴"];
 const FLAG = {new:"NEW", surprise:"예상 밖", linked:"연결"};
 
-const S = { themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
+const S = { watch:[], themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = id => document.getElementById(id);
@@ -585,6 +597,18 @@ function bankHtml(){
       return `<div class="brow"><span class="sc">${esc(x.score??"–")}</span><div class="t">${esc(x.q)}<div class="m">${esc(themeName(x.theme))} · 근거 뉴스 ${(x.news||[]).length} · 대기 ${daysSince(x.first_seen)}일</div></div><span class="need ${ready?"ready":"wait"}">${ready?"조건 충족":`분석 ${na}/3`}</span></div>`; }).join("")}</div>
     <p class="note" style="margin:0">분석 3건 이상과 서로 다른 입장이 모이면 깊은 이슈로 올라갑니다. 점수는 파급력, 새 신호, 의견 갈림, 나와의 관련도, 방향 전환, 다가오는 결정일로 매깁니다.</p></div>`;
 }
+const WATCH_AREA={cost:"원가",rule:"규제",labor:"인력",channel:"유통·채널",demand:"소비자",korean:"한식·한국 술",sf:"SF 외식"};
+function watchHtml(b,i){
+  const w=b.watch; if(!w) return "";
+  const fired=w.fired||[]; const all=(S.watch||[]).slice().sort((a,b)=>(a.order||99)-(b.order||99));
+  const byId=id=>all.find(x=>x.id===id);
+  return `<div class="layer" id="sec-watch"><div class="layerhead"><h2>식음료 감시</h2><span class="label">${fired.length?`걸림 ${fired.length}건`:"이상 없음"} · ${esc(w.checked??all.length)}개 점검</span></div>
+    ${fired.length?`<div class="watch">${fired.map(f=>{ const t=byId(f.id)||{}; return `<div class="wrow"><div class="h"><span class="ar">${esc(WATCH_AREA[t.area]||t.area||"")}</span><span class="nm">${esc(t.name||f.id)}</span></div><div class="tx">${esc(f.text||"")}${safeUrl(f.url)?` <a href="${esc(f.url)}" target="_blank" rel="noopener">원문</a>`:""}</div>${f.so_what?`<div class="so">나에게: ${esc(f.so_what)}</div>`:""}</div>`; }).join("")}</div>`
+      :`<p class="wquiet">오늘은 기준선을 넘은 식음료 소식이 없습니다. 빈자리를 억지로 채우지 않습니다.</p>`}
+    ${w.note?`<p class="note" style="margin:0">${esc(w.note)}</p>`:""}
+    ${i===0&&all.length?`<details class="more"><summary>감시 목록 ${all.length}개 · 무엇을 어떤 기준으로 보나</summary><ul class="wlist">${all.map(t=>`<li><b>${esc(t.name)}</b> <span class="c">· ${esc(WATCH_AREA[t.area]||t.area||"")}${t.last_fired?` · 최근 걸림 ${esc(t.last_fired)}`:""}</span><div>${esc(t.trigger||"")}</div><div class="c">${esc(t.why_me||"")}</div></li>`).join("")}</ul></details>`:""}
+  </div>`;
+}
 const SEL_ORDER=[["world","세계"],["us","미국"],["tech","기술·AI"],["food","식음료·소비"],["korea","한국"]];
 function renderBriefV2(p,b,i){
   const sel=b.selected||[], scan=b.scan||[], di=b.deep_issues||[];
@@ -600,7 +624,7 @@ function renderBriefV2(p,b,i){
     ${b.explore_note?`<button class="storylink" id="goexplore">이번 주 탐구 ${esc(b.explore_note)} ›</button>`:""}
     ${i===0?weatherHtml():""}
   </div>
-  <nav class="qnav" aria-label="바로 가기">${di.map((d,k)=>`<a href="#" data-go="di-${k}">깊은 이슈 ${k+1}</a>`).join("")}${i===0&&(S.issues||[]).some(x=>x.status==="waiting")?`<a href="#" data-go="sec-bank">대기 이슈</a>`:""}${(b.theme_board||[]).length?`<a href="#" data-go="sec-theme">테마</a>`:""}${sel.length?`<a href="#" data-go="sec-news">뉴스</a>`:""}</nav>
+  <nav class="qnav" aria-label="바로 가기">${di.map((d,k)=>`<a href="#" data-go="di-${k}">깊은 이슈 ${k+1}</a>`).join("")}${i===0&&(S.issues||[]).some(x=>x.status==="waiting")?`<a href="#" data-go="sec-bank">대기 이슈</a>`:""}${(b.theme_board||[]).length?`<a href="#" data-go="sec-theme">테마</a>`:""}${b.watch&&(b.watch.fired||[]).length?`<a href="#" data-go="sec-watch">식음료 감시</a>`:""}${sel.length?`<a href="#" data-go="sec-news">뉴스</a>`:""}</nav>
   ${b.force_note&&b.force_note.text?`<div class="layer"><div class="layerhead"><h2>${esc(b.force_note.title||"이번 주 큰 힘")}</h2><span class="label">느린 변수 · 주간</span></div>
     <p style="margin:0">${esc(b.force_note.text)}</p>${forceChips(b.force_note.forces)}</div>`:""}
   <div class="layer"><div class="layerhead"><h2>${b.weekly_split?"이번 주 전문가들이 가장 갈린 질문":"오늘의 깊은 이슈"}</h2><span class="label">여러 뉴스 + 전문가 분석을 엮은 판단</span></div>
@@ -610,6 +634,7 @@ function renderBriefV2(p,b,i){
   ${i===0?bankHtml():""}
   ${(b.theme_board||[]).length?`<div class="layer" id="sec-theme"><div class="layerhead"><h2>테마 현황</h2><span class="label">오늘 움직임 · 누르면 큰 이야기로</span></div>
     <div class="tboard">${b.theme_board.map(t=>`<button class="trow" data-theme="${esc(t.theme)}"><span class="mv" data-m="${esc(t.move||"flat")}">${{up:"▲",down:"▼"}[t.move]||"―"}</span><span class="nm">${esc(themeName(t.theme))}</span><span class="ln">${esc(t.line||"")}</span></button>`).join("")}</div></div>`:""}
+  ${watchHtml(b,i)}
   ${sel.length?`<div class="layer" id="sec-news"><div class="layerhead"><h2>선별 뉴스</h2><span class="label">${sel.length}건 · 세계 → 미국 → 기술 → 식음료 → 한국</span></div>
     ${SEL_ORDER.map(([k,n])=>{ const xs=sel.filter(s=>s.field===k); return xs.length?`<div class="sel"><span class="label">${n}</span><ul class="news">${xs.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:`<span style="font-weight:500">${esc(s.title)}</span>`}${s.why?`<span class="w">${esc(s.why)}</span>`:""}<span class="s">${esc(s.source||"")}${s.theme?` · ${esc(themeName(s.theme))}`:""}</span></li>`).join("")}</ul></div>`:""; }).join("")}
     ${(()=>{ const other=sel.filter(s=>!SEL_ORDER.some(([k])=>k===s.field)); return other.length?`<div class="sel"><span class="label">기타</span><ul class="news">${other.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:esc(s.title)}${s.why?`<span class="w">${esc(s.why)}</span>`:""}<span class="s">${esc(s.source||"")}</span></li>`).join("")}</ul></div>`:""; })()}
@@ -1218,6 +1243,7 @@ renderAll();
   db.collection("stories").onSnapshot(s=>{ S.stories=docs(s); renderStories(); renderBrief(); }, err);
   db.collection("themes").onSnapshot(s=>{ S.themes=docs(s); renderStories(); renderBrief(); }, err);
   db.collection("issues").onSnapshot(s=>{ S.issues=docs(s); renderBrief(); }, err);
+  db.collection("watch").onSnapshot(s=>{ S.watch=docs(s); renderBrief(); }, err);
   db.collection("explorations").onSnapshot(s=>{ S.explores=docs(s); renderExplore(); }, err);
   const keepOpen=fn=>{ const p=$("p-ind"); const og=[...p.querySelectorAll("details.group[open]")].map(d=>d.dataset.group); const ob=[...p.querySelectorAll("details.back[open]")].map(d=>(d.closest(".moved")?".moved ":"details.group ")+`details.back[data-ind="${d.dataset.ind}"]`); fn(); og.forEach(g=>{const d=p.querySelector(`details.group[data-group="${g}"]`); if(d) d.open=true;}); ob.forEach(sel=>p.querySelectorAll(sel).forEach(d=>d.open=true)); };
   db.collection("indicators").onSnapshot(s=>{ S.inds=docs(s); keepOpen(renderIndicators); renderBrief(); }, err);

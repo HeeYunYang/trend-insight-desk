@@ -125,6 +125,32 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     ok(errs.length === 0, N + ': errors: ' + errs.join(' | '));
     await ctx.close();
   }
+  // food watch: fired item + quiet day, using the real bundle with a sample watch on the newest brief
+  for (const fired of [true, false]) {
+    const fs = require('fs'); const path = require('path');
+    const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bundle.json'), 'utf8'));
+    const br = real.collections.briefs.slice().sort((x, y) => y.date < x.date ? -1 : 1)[0];
+    br.watch = { checked: 18, fired: fired ? [{ id: 'kr-tariff', text: '시험용: 한국산 발효주 관세 변경 발표', url: 'https://example.com/a', so_what: '수입 막걸리 원가 상승' }] : [], note: '' };
+    const { p, errs, ctx } = await page(b, { vp: { width: 390, height: 844 }, mobile: true, route: r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(real) }) });
+    const N = 'watch-' + (fired ? 'fired' : 'quiet');
+    await tab(p, 't-brief');
+    ok(await p.isVisible('#sec-watch'), N + ': watch section missing');
+    if (fired) {
+      ok((await p.$$('#sec-watch .wrow')).length === 1, N + ': fired row missing');
+      ok((await p.textContent('#sec-watch .wrow')).includes('한국산 주류·식품 관세'), N + ': tripwire name not resolved');
+      ok((await p.$$('#p-brief .qnav a[data-go="sec-watch"]')).length === 1, N + ': quick nav link missing');
+    } else {
+      ok(await p.isVisible('#sec-watch .wquiet'), N + ': quiet line missing');
+      ok((await p.$$('#p-brief .qnav a[data-go="sec-watch"]')).length === 0, N + ': quick nav should skip quiet watch');
+    }
+    if ((real.collections.watch || []).length) {
+      await p.locator('#sec-watch details.more > summary').click(); await p.waitForTimeout(100);
+      ok((await p.$$('#sec-watch .wlist li')).length === real.collections.watch.length, N + ': watch list incomplete');
+    }
+    ok(await noOverflow(p), N + ': overflow');
+    ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
+    await ctx.close();
+  }
   // missing bundle -> banner, no crash
   {
     const { p, errs, ctx } = await page(b, { route: r => r.fulfill({ status: 404, body: 'nope' }) });
