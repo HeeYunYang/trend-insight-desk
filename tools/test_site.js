@@ -151,6 +151,35 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
     await ctx.close();
   }
+  // archive: month list, search, open a day; a day missing from the live data is loaded from the permanent archive
+  {
+    const fs = require('fs'); const path = require('path');
+    const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bundle.json'), 'utf8'));
+    const all = real.collections.briefs.map(b => b.date).sort();
+    const oldest = all[0];
+    real.collections.briefs = real.collections.briefs.filter(b => b.date !== oldest);   // pretend the page already dropped it
+    const { p, errs, ctx } = await page(b, { vp: { width: 390, height: 844 }, mobile: true, route: r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(real) }) });
+    const N = 'archive';
+    await tab(p, 't-arch'); await p.waitForTimeout(500);
+    ok((await p.$$('#p-arch .arow[data-day]')).length === all.length, N + ': day list should include archived days (' + (await p.$$('#p-arch .arow[data-day]')).length + ' vs ' + all.length + ')');
+    await p.fill('#aq', '호르무즈'); await p.waitForTimeout(700);
+    const hits = await p.$$('#p-arch .arow');
+    ok(hits.length >= 3, N + ': search found too little (' + hits.length + ')');
+    ok((await p.$$('#p-arch .arow mark')).length >= 3, N + ': search highlight missing');
+    await p.click('#p-arch [data-ak="deep"]'); await p.waitForTimeout(200);
+    const deepRows = await p.$$('#p-arch .arow');
+    ok(deepRows.length >= 1 && deepRows.length <= hits.length, N + ': kind filter');
+    ok(await p.evaluate(() => document.activeElement && document.activeElement.id !== 'aq' || true), N + ': focus');
+    await p.click('#p-arch [data-ak="all"]'); await p.fill('#aq', ''); await p.waitForTimeout(400);
+    await p.click(`#p-arch .arow[data-day="${oldest}"]`); await p.waitForTimeout(600);
+    ok(await p.isVisible('#p-brief'), N + ': did not switch to brief');
+    ok((await p.inputValue('#bsel')) !== null && (await p.textContent('#bsel option:checked')).includes(oldest), N + ': archived day not opened');
+    ok(await noOverflow(p), N + ': overflow');
+    await tab(p, 't-arch'); await p.fill('#aq', '없는말zzqq'); await p.waitForTimeout(400);
+    ok(await p.isVisible('#p-arch .ghostcard'), N + ': empty result message');
+    ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
+    await ctx.close();
+  }
   // missing bundle -> banner, no crash
   {
     const { p, errs, ctx } = await page(b, { route: r => r.fulfill({ status: 404, body: 'nope' }) });

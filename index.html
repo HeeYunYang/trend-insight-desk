@@ -314,6 +314,17 @@ svg.map .col{font-size:13px;fill:var(--muted);letter-spacing:.04em}
 .wrow .nm{font-weight:600;font-size:15px}
 .wrow .tx{font-size:15px;margin-top:4px}
 .wrow .so{font-size:14px;color:var(--muted);margin-top:4px}
+.asearch{display:grid;gap:8px}
+.asearch input{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px;width:100%;min-width:0;font-size:16px}
+.alist{display:grid;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.arow{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 12px;cursor:pointer;color:var(--ink)}
+.arow:first-child{border-top:0}
+.arow .d{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.arow .h{font-size:15px;font-weight:600;margin-top:2px}
+.arow .q{font-size:14px;color:var(--muted);margin-top:2px}
+.arow .k{font-size:13px;color:var(--muted);margin-right:6px}
+.arow mark{background:color-mix(in srgb,var(--s2,#c80) 28%,transparent);color:inherit;border-radius:2px}
+.arow .ix{display:grid;gap:6px;margin-top:8px;font-size:14px}
 .wquiet{font-size:15px;color:var(--muted);margin:0}
 .wlist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
 .wlist li{font-size:14px;border-top:1px solid var(--line);padding-top:8px}
@@ -475,6 +486,7 @@ nav.tabs.more{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);
       <button class="tab" role="tab" id="t-explore" aria-controls="p-explore" aria-selected="false">탐구<span class="n" id="n-explore"></span></button>
       <button class="tab" role="tab" id="t-trends" aria-controls="p-trends" aria-selected="false">트렌드 장부<span class="n" id="n-trends"></span></button>
       <button class="tab" role="tab" id="t-slow" aria-controls="p-slow" aria-selected="false">느린 변수</button>
+      <button class="tab" role="tab" id="t-arch" aria-controls="p-arch" aria-selected="false">아카이브</button>
       <button class="tab" role="tab" id="t-pred" aria-controls="p-pred" aria-selected="false">예측<span class="n" id="n-pred"></span></button>
       <button class="tab" role="tab" id="t-mine" aria-controls="p-mine" aria-selected="false">내 인사이트</button>
       <button class="tab" role="tab" id="t-field" aria-controls="p-field" aria-selected="false">현장 신호</button>
@@ -489,6 +501,7 @@ nav.tabs.more{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);
   <section role="tabpanel" id="p-explore" aria-labelledby="t-explore" hidden></section>
   <section role="tabpanel" id="p-trends" aria-labelledby="t-trends" hidden></section>
   <section role="tabpanel" id="p-slow" aria-labelledby="t-slow" hidden></section>
+  <section role="tabpanel" id="p-arch" aria-labelledby="t-arch" hidden></section>
   <section role="tabpanel" id="p-pred" aria-labelledby="t-pred" hidden></section>
   <section role="tabpanel" id="p-mine" aria-labelledby="t-mine" hidden></section>
   <section role="tabpanel" id="p-field" aria-labelledby="t-field" hidden></section>
@@ -664,6 +677,116 @@ function renderExplore(){
   ${weeks.length?weeks.map((w,k)=>`<details class="more" ${k===0?"open":""}><summary>${fmtDate(w)} 주 · ${xs.filter(x=>x.date===w).length}편</summary><div style="display:grid;gap:16px;margin-top:10px">${xs.filter(x=>x.date===w).map(x=>deepHtml(x,{kind:"explore",open:true})).join("")}</div></details>`).join("")
   :`<div class="empty"><h3>첫 탐구는 다음 월요일 아침에 올라옵니다</h3><p class="muted" style="margin:0">이슈 뱅크에서 2~3개를 골라 배경, 메커니즘, 전문가 비교, 시나리오, 예측까지 정리합니다.</p></div>`}`;
   wireForces(p);
+}
+
+/* ---------- archive ---------- */
+const ARCH_KINDS=[["all","전체"],["deep","깊은 이슈"],["news","뉴스"],["explore","탐구"],["issue","이슈 뱅크"],["watch","식음료 감시"]];
+const A={q:"",kind:"all",years:null,loaded:{},entries:{},loading:false,err:"",open:""};
+function archEntry(b){
+  const sh=(t,n)=>{ t=String(t||"").replace(/\s+/g," ").trim(); return t.length>n?t.slice(0,n-1)+"…":t; };
+  const e={date:b.date,headline:sh(b.headline,140),deep:[],news:[],watch:[]};
+  (b.deep_issues||[]).forEach(d=>e.deep.push({q:sh(d.q,90),c:sh(d.conclusion,300),t:(d.disputes||[]).map(x=>sh(x.title,60)).join(" / "),b:sh(d.built,300),issue:d.issue||"",theme:d.theme||""}));
+  if(!(b.deep_issues||[]).length) (b.deep||[]).forEach(d=>e.deep.push({q:sh(d.title,120),c:sh(d.fact,300),t:"",b:sh(d.context,300),issue:"",theme:""}));
+  (b.selected||b.items||[]).slice(0,15).forEach(x=>e.news.push({t:sh(x.title,100),u:x.url||"",f:x.field||""}));
+  ((b.watch||{}).fired||[]).forEach(w=>e.watch.push({id:w.id||"",t:sh(w.text,160),u:w.url||""}));
+  return e;
+}
+function archAll(){ // newest first; the live database wins over the file archive for the same day
+  const m={}; Object.values(A.entries).forEach(es=>es.forEach(e=>m[e.date]=e)); S.briefs.forEach(b=>{ if(b.date) m[b.date]=archEntry(b); });
+  return Object.values(m).sort((a,b)=>b.date.localeCompare(a.date));
+}
+async function archLoad(all){
+  if(!window.TD_STATIC||A.loading) return;
+  A.loading=true;
+  try{
+    if(!A.years){ const r=await fetch("data/archive/index.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw new Error("HTTP "+r.status); A.years=(await r.json()).years||[]; }
+    const want=(all?A.years:A.years.slice(0,1)).map(y=>y.year).filter(y=>!A.loaded[y]);
+    for(const y of want){ const r=await fetch(`data/archive/${y}.json?t=${Date.now()}`,{cache:"no-store"}); if(!r.ok) throw new Error("HTTP "+r.status); A.entries[y]=(await r.json()).entries||[]; A.loaded[y]=true; }
+    A.err="";
+  }catch(e){ A.err="보관 파일을 불러오지 못했습니다. 최근 브리프만 보입니다."; }
+  A.loading=false; renderArchive();
+}
+async function openBriefDate(date,k){
+  let i=S.briefs.findIndex(b=>b.date===date);
+  if(i<0 && window.TD_STATIC){
+    try{ const r=await fetch(`data/archive/briefs/${date}.json`); if(!r.ok) throw 0; const b=await r.json(); b.id=b.id||date;
+      S.briefs=[...S.briefs,b].sort((x,y)=>(y.date||"").localeCompare(x.date||"")); i=S.briefs.findIndex(x=>x.date===date); }
+    catch(e){ toast("그날 브리프를 불러오지 못했습니다"); return; }
+  }
+  if(i<0){ toast("90일이 지난 브리프는 웹앱 아카이브에 있습니다"); return; }
+  S.briefIdx=i; renderBrief(); selectTab("t-brief");
+  setTimeout(()=>{ const t=k!=null?$("di-"+k):null; if(t) t.scrollIntoView({block:"start"}); else window.scrollTo({top:0}); },60);
+}
+function archHl(text,toks){
+  text=String(text||""); if(!toks.length) return esc(text);
+  const low=text.toLowerCase(); const marks=new Array(text.length).fill(false);
+  toks=[...new Set(toks.flatMap(t=>[t,...(ARCH_SYN[archNorm(t)]||[])]))];
+  toks.forEach(t=>{ let i=low.indexOf(t); while(i>=0){ for(let j=i;j<i+t.length;j++) marks[j]=true; i=low.indexOf(t,i+t.length); } });
+  let out="",on=false; for(let i=0;i<text.length;i++){ if(marks[i]!==on){ out+=on?"</mark>":"<mark>"; on=marks[i]; } out+=esc(text[i]); } return out+(on?"</mark>":"");
+}
+const ARCH_SYN={"국채":["국채","채권","장기금리","10년물","국고채","jgb","oat","bund","분트","treasury"],"금리":["금리","수익률","yield"],"관세":["관세","tariff"],"ai":["ai","인공지능"],"인공지능":["ai","인공지능"],"막걸리":["막걸리","전통주","한국술"],"유가":["유가","원유","브렌트","oil"],"환율":["환율","원/달러","달러"],"일본":["일본","jgb","boj","엔화","일본은행"],"연준":["연준","fed","파월"]};
+const archNorm=t=>String(t||"").toLowerCase().replace(/\s+/g,"");
+function archResults(toks){
+  const alts=toks.map(t=>[...new Set([archNorm(t),...((ARCH_SYN[archNorm(t)])||[]).map(archNorm)])]);
+  const has=(...xs)=>{ const h=archNorm(xs.join(" ")); return alts.every(a=>a.some(t=>h.includes(t))); };
+  const R=[]; const K=A.kind;
+  archAll().forEach(e=>{
+    if((K==="all")&&has(e.headline)) R.push({kind:"day",date:e.date,text:e.headline});
+    if(K==="all"||K==="deep") e.deep.forEach((d,k)=>{ if(has(d.q,d.c,d.t,d.b,themeName(d.theme))) R.push({kind:"deep",date:e.date,k,text:d.q,sub:d.c}); });
+    if(K==="all"||K==="news") e.news.forEach(n=>{ if(has(n.t)) R.push({kind:"news",date:e.date,text:n.t,url:n.u}); });
+    if(K==="all"||K==="watch") e.watch.forEach(w=>{ const t=(S.watch||[]).find(x=>x.id===w.id); if(has(w.t,t?t.name:"")) R.push({kind:"watch",date:e.date,text:w.t,sub:t?t.name:"",url:w.u}); });
+  });
+  if(K==="all"||K==="explore") (S.explores||[]).forEach(x=>{ if(has(x.q,x.conclusion,x.background,themeName(x.theme))) R.push({kind:"explore",date:x.date||"",text:x.q,sub:x.conclusion,id:x.id}); });
+  if(K==="all"||K==="issue") (S.issues||[]).forEach(x=>{ if(has(x.q,x.note,themeName(x.theme))) R.push({kind:"issue",date:x.last_signal||x.first_seen||"",text:x.q,id:x.id}); });
+  return R.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+}
+const ISSUE_ST={waiting:"대기",selected:"깊은 이슈로 다룸",explored:"탐구로 다룸",digested:"소화됨",merged:"다른 질문에 합쳐짐",dropped:"내려놓음"};
+function issueDetail(x){
+  const picks=(x.picked||[]);
+  return `<div class="ix"><div>${esc(ISSUE_ST[x.status]||x.status||"")} · 처음 ${esc(x.first_seen||"–")} · 마지막 신호 ${esc(x.last_signal||"–")} · 점수 ${esc(x.score??"–")}</div>
+    <div>근거 뉴스 ${(x.news||[]).length} · 읽은 분석 ${(x.analyses||[]).length}${x.note?` · ${esc(x.note)}`:""}</div>
+    ${picks.length?`<div>다룬 날: ${picks.map(d=>`<a href="#" data-day="${esc(d)}">${esc(d)}</a>`).join(" · ")}</div>`:""}
+    ${(x.analyses||[]).slice(0,6).map(a=>`<div class="muted">${esc(a.stance||"")} — ${esc(a.author||"")} (${esc(a.outlet||"")}) ${safeUrl(a.url)?`<a href="${esc(a.url)}" target="_blank" rel="noopener">원문</a>`:""}</div>`).join("")}</div>`;
+}
+function renderArchive(){
+  const p=$("p-arch"); if(!p) return;
+  if(window.TD_STATIC && !A.years && !A.loading && !A.err) archLoad(false);
+  const keep=document.activeElement&&document.activeElement.id==="aq"; const pos=keep?document.activeElement.selectionStart:null;
+  const toks=A.q.toLowerCase().split(/\s+/).filter(t=>t.length>=1); const searching=A.q.trim().length>=2;
+  const days=archAll();
+  const head=`<div class="sectionhead"><h2>아카이브</h2><span class="label">브리프 ${days.length}일 · 탐구 ${(S.explores||[]).length}편 · 이슈 ${(S.issues||[]).length}개</span></div>
+  <div class="asearch"><input id="aq" type="search" placeholder="검색: 예) 일본 국채, 관세 막걸리, 호르무즈" value="${esc(A.q)}" aria-label="아카이브 검색" autocomplete="off">
+    <div class="chips">${ARCH_KINDS.map(([k,n])=>`<button class="chip" data-ak="${k}" aria-pressed="${A.kind===k}">${n}</button>`).join("")}</div></div>
+  ${A.err?`<p class="note" style="margin:0">${esc(A.err)}</p>`:""}
+  ${!window.TD_STATIC?`<p class="note" style="margin:0">이 페이지에는 최근 90일 브리프가 있습니다. 그보다 오래된 날은 웹앱의 아카이브 탭에 영구 보관됩니다.</p>`:""}`;
+  let body="";
+  if(searching){
+    const R=archResults(toks); const shown=R.slice(0,120);
+    const KN={day:"헤드라인",deep:"깊은 이슈",news:"뉴스",watch:"식음료 감시",explore:"탐구",issue:"이슈 뱅크"};
+    body=`<p class="note" style="margin:0">${R.length}건${R.length>shown.length?` · 최근 ${shown.length}건만 표시`:""}${A.loading?" · 이전 기록 불러오는 중":""}</p>
+    ${shown.length?`<div class="alist">${shown.map((r,n)=>{
+      const meta=`<div class="d"><span class="k">${KN[r.kind]}</span>${esc(r.date||"")}</div>`;
+      if(r.kind==="news"||(r.kind==="watch"&&safeUrl(r.url))) return `<a class="arow" href="${esc(r.url)}" target="_blank" rel="noopener">${meta}<div class="h">${archHl(r.text,toks)}</div>${r.sub?`<div class="q">${archHl(r.sub,toks)}</div>`:""}</a>`;
+      if(r.kind==="issue"){ const x=(S.issues||[]).find(z=>z.id===r.id)||{}; const op=A.open===r.id; return `<div class="arow" role="button" tabindex="0" data-issue="${esc(r.id)}" aria-expanded="${op}">${meta}<div class="h">${archHl(r.text,toks)}</div>${op?issueDetail(x):""}</div>`; }
+      if(r.kind==="explore") return `<button class="arow" data-explore="${esc(r.id)}">${meta}<div class="h">${archHl(r.text,toks)}</div>${r.sub?`<div class="q">${archHl(r.sub,toks)}</div>`:""}</button>`;
+      return `<button class="arow" data-day="${esc(r.date)}" ${r.k!=null?`data-k="${r.k}"`:""}>${meta}<div class="h">${archHl(r.text,toks)}</div>${r.sub?`<div class="q">${archHl(r.sub,toks)}</div>`:""}</button>`;
+    }).join("")}</div>`:`<div class="ghostcard">찾는 말이 들어간 기록이 없습니다. 더 짧은 말이나 다른 표현으로 찾아보세요.</div>`}`;
+  } else {
+    const months=[...new Set(days.map(e=>e.date.slice(0,7)))];
+    body=months.length?months.map((m,k)=>{ const es=days.filter(e=>e.date.startsWith(m));
+      return `<details class="more" ${k===0?"open":""}><summary>${esc(m.replace("-","년 "))}월 · ${es.length}일</summary><div class="alist" style="margin-top:8px">${es.map(e=>`<button class="arow" data-day="${esc(e.date)}"><div class="d">${esc(fmtDate(e.date))}</div><div class="h">${esc(e.headline)}</div>${e.deep.map(d=>`<div class="q">· ${esc(d.q)}</div>`).join("")}</button>`).join("")}</div></details>`; }).join("")
+      +(window.TD_STATIC&&A.years&&A.years.length>1&&Object.keys(A.loaded).length<A.years.length?`<button class="storylink" id="amore">이전 연도 불러오기 ›</button>`:"")
+      :`<div class="empty"><h3>${A.loading?"불러오는 중":"아직 보관된 브리프가 없습니다"}</h3></div>`;
+  }
+  p.innerHTML=head+body;
+  const inp=$("aq"); let tmr=null;
+  inp.addEventListener("input",()=>{ clearTimeout(tmr); tmr=setTimeout(()=>{ A.q=inp.value; if(A.q.trim().length>=2&&window.TD_STATIC&&A.years&&Object.keys(A.loaded).length<A.years.length) archLoad(true); renderArchive(); },220); });
+  if(keep){ inp.focus(); try{ inp.setSelectionRange(pos,pos); }catch(e){} }
+  p.querySelectorAll("[data-ak]").forEach(b=>b.onclick=()=>{ A.kind=b.dataset.ak; renderArchive(); });
+  p.querySelectorAll("[data-day]").forEach(b=>b.addEventListener("click",e=>{ e.preventDefault(); e.stopPropagation(); openBriefDate(b.dataset.day,b.dataset.k!=null?+b.dataset.k:null); }));
+  p.querySelectorAll("[data-explore]").forEach(b=>b.onclick=()=>{ selectTab("t-explore"); window.scrollTo({top:0}); });
+  p.querySelectorAll("[data-issue]").forEach(b=>{ const t=()=>{ A.open=A.open===b.dataset.issue?"":b.dataset.issue; renderArchive(); }; b.onclick=e=>{ if(e.target.closest("a")) return; t(); }; b.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); t(); } }; });
+  if($("amore")) $("amore").onclick=()=>archLoad(true);
 }
 
 /* ---------- brief ---------- */
@@ -1222,7 +1345,7 @@ function renderSync(){
   el.innerHTML = `로컬 <b>${esc(S.sync.last_synced_date.slice(5))}</b>까지${pending?` · 대기 ${pending}일`:""}`;
 }
 
-function renderAll(){ renderBrief(); renderIndicators(); renderStories(); renderExplore(); renderTrends(); renderSlow(); renderPreds(); renderSignals(); renderSync(); }
+function renderAll(){ renderBrief(); renderArchive(); renderIndicators(); renderStories(); renderExplore(); renderTrends(); renderSlow(); renderPreds(); renderSignals(); renderSync(); }
 renderAll();
 
 /* ---------- data ---------- */
@@ -1238,13 +1361,13 @@ renderAll();
     S.briefs = docs(s);
     const k = prevDate ? S.briefs.findIndex(b=>b.date===prevDate) : 0;
     S.briefIdx = k<0 ? 0 : k;
-    renderBrief(); renderSync();
+    renderBrief(); renderSync(); renderArchive();
   }, err);
   db.collection("stories").onSnapshot(s=>{ S.stories=docs(s); renderStories(); renderBrief(); }, err);
   db.collection("themes").onSnapshot(s=>{ S.themes=docs(s); renderStories(); renderBrief(); }, err);
-  db.collection("issues").onSnapshot(s=>{ S.issues=docs(s); renderBrief(); }, err);
+  db.collection("issues").onSnapshot(s=>{ S.issues=docs(s); renderBrief(); renderArchive(); }, err);
   db.collection("watch").onSnapshot(s=>{ S.watch=docs(s); renderBrief(); }, err);
-  db.collection("explorations").onSnapshot(s=>{ S.explores=docs(s); renderExplore(); }, err);
+  db.collection("explorations").onSnapshot(s=>{ S.explores=docs(s); renderExplore(); renderArchive(); }, err);
   const keepOpen=fn=>{ const p=$("p-ind"); const og=[...p.querySelectorAll("details.group[open]")].map(d=>d.dataset.group); const ob=[...p.querySelectorAll("details.back[open]")].map(d=>(d.closest(".moved")?".moved ":"details.group ")+`details.back[data-ind="${d.dataset.ind}"]`); fn(); og.forEach(g=>{const d=p.querySelector(`details.group[data-group="${g}"]`); if(d) d.open=true;}); ob.forEach(sel=>p.querySelectorAll(sel).forEach(d=>d.open=true)); };
   db.collection("indicators").onSnapshot(s=>{ S.inds=docs(s); keepOpen(renderIndicators); renderBrief(); }, err);
   db.doc("meta/indicator_groups").onSnapshot(d=>{ S.indGroups=d.exists?(d.data().groups||[]):[]; keepOpen(renderIndicators); }, err);

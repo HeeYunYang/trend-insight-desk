@@ -5,6 +5,8 @@ Usage: python3 scripts/build_bundle.py <dump_dir> <out_json> [--with-signals]
 <dump_dir>/meta/<doc_id>.json          -> docs["meta/<doc_id>"]
 """
 import json, os, sys, glob, datetime
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import archive
 dump, out = sys.argv[1], sys.argv[2]
 with_signals = "--with-signals" in sys.argv
 COLLECTIONS = ["briefs", "stories", "indicators", "trends", "slow_vars", "predictions", "themes", "issues", "explorations", "watch"] + (["field_signals"] if with_signals else [])
@@ -52,3 +54,7 @@ with open(tmp, "w", encoding="utf-8") as f:
     json.dump(bundle, f, ensure_ascii=False, separators=(",", ":"))
 os.replace(tmp, out)
 print("bundle:", {k: len(v) for k, v in bundle["collections"].items()}, "docs:", list(bundle["docs"]), os.path.getsize(out), "bytes")
+
+# permanent archive (briefs never pruned here, even after the Claude page drops them)
+w, n = archive.write(bundle["collections"]["briefs"], os.path.join(os.path.dirname(out) or ".", "archive"))
+print("archive: wrote", w, "briefs; total days", n)
