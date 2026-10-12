@@ -325,6 +325,15 @@ svg.map .col{font-size:13px;fill:var(--muted);letter-spacing:.04em}
 .arow .k{font-size:13px;color:var(--muted);margin-right:6px}
 .arow mark{background:color-mix(in srgb,var(--s2,#c80) 28%,transparent);color:inherit;border-radius:2px}
 .arow .ix{display:grid;gap:6px;margin-top:8px;font-size:14px}
+.aud .stat{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.aud .stat b{color:var(--ink);font-family:var(--mono)}
+.miss{border-top:1px solid var(--line);padding:10px 0;display:grid;gap:4px}
+.miss:first-child{border-top:0}
+.miss .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.miss .kd{font-size:13px;border:1px solid var(--line-strong);border-radius:4px;padding:0 6px;white-space:nowrap}
+.miss .kd[data-k="놓침"]{color:var(--down);border-color:var(--down)} .miss .kd[data-k="늦음"]{color:var(--warn);border-color:var(--warn)}
+.miss .ev{font-weight:600;font-size:15px}
+.miss .fx{font-size:14px} .miss .cz{font-size:13px;color:var(--muted)}
 .wquiet{font-size:15px;color:var(--muted);margin:0}
 .wlist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
 .wlist li{font-size:14px;border-top:1px solid var(--line);padding-top:8px}
@@ -517,7 +526,7 @@ const FIELDS = {
 const STAGES = ["태동","성장","성숙","쇠퇴"];
 const FLAG = {new:"NEW", surprise:"예상 밖", linked:"연결"};
 
-const S = { watch:[], themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
+const S = { audits:[], watch:[], themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = id => document.getElementById(id);
@@ -622,6 +631,22 @@ function watchHtml(b,i){
     ${i===0&&all.length?`<details class="more"><summary>감시 목록 ${all.length}개 · 무엇을 어떤 기준으로 보나</summary><ul class="wlist">${all.map(t=>`<li><b>${esc(t.name)}</b> <span class="c">· ${esc(WATCH_AREA[t.area]||t.area||"")}${t.last_fired?` · 최근 걸림 ${esc(t.last_fired)}`:""}</span><div>${esc(t.trigger||"")}</div><div class="c">${esc(t.why_me||"")}</div></li>`).join("")}</ul></details>`:""}
   </div>`;
 }
+function auditStats(a){ const st=a.stats||{}; const n=a.checked||0;
+  return `<div class="stat"><span>점검 <b>${esc(n)}</b>건</span><span>제때 <b>${esc(st.on_time??"–")}</b></span><span>늦음 <b>${esc(st.late??"–")}</b></span><span>과소평가 <b>${esc(st.under??"–")}</b></span><span>놓침 <b>${esc(st.missed??"–")}</b></span>${a.catch_rate!=null?`<span>제때 잡은 비율 <b>${Math.round(a.catch_rate*100)}%</b></span>`:""}</div>`; }
+const FIX_T={checklist:"점검 목록 추가",source:"출처 추가",scoring:"판단 기준 보정",watch:"식음료 감시 추가",story:"큰 이야기 추가",indicator_suggest:"지표 제안"};
+function auditMisses(a){ return (a.misses||[]).map(m=>`<div class="miss"><div class="h"><span class="kd" data-k="${esc(m.kind)}">${esc(m.kind||"")}</span><span class="ev">${esc(m.event||"")}</span></div>
+  <div class="cz">${esc(m.happened||"")} 발생 · ${m.first_seen?`처음 잡은 날 ${esc(m.first_seen)}`:"브리프에 없음"}${m.where?` · ${esc(m.where)}`:""}${m.cause?` · 원인: ${esc(m.cause)}`:""}${safeUrl(m.url)?` · <a href="${esc(m.url)}" target="_blank" rel="noopener">원문</a>`:""}</div>
+  ${m.why_matters?`<div>${esc(m.why_matters)}</div>`:""}
+  ${m.fix?`<div class="fx"><b>${esc(FIX_T[(m.applied||{}).type]||"고친 점")}</b> · ${esc(m.fix)}</div>`:""}</div>`).join(""); }
+function auditHtml(b,i){
+  if(i!==0) return "";
+  const a=[...(S.audits||[])].sort((x,y)=>(y.date||"").localeCompare(x.date||""))[0];
+  if(!a||daysSince(a.date)>7) return "";
+  const n=(a.misses||[]).length;
+  return `<div class="layer aud" id="sec-audit"><div class="layerhead"><h2>지난주 놓친 신호</h2><span class="label">${esc(a.week_from||"")}~${esc(a.week_to||"")} 점검 · 매주 일요일</span></div>
+    ${auditStats(a)}${a.summary?`<p style="margin:0">${esc(a.summary)}</p>`:""}
+    ${n?`<details class="more"><summary>놓치거나 늦은 것 ${n}건과 고친 점</summary><div style="margin-top:6px">${auditMisses(a)}</div></details>`:""}</div>`;
+}
 const SEL_ORDER=[["world","세계"],["us","미국"],["tech","기술·AI"],["food","식음료·소비"],["korea","한국"]];
 function renderBriefV2(p,b,i){
   const sel=b.selected||[], scan=b.scan||[], di=b.deep_issues||[];
@@ -652,6 +677,7 @@ function renderBriefV2(p,b,i){
     ${SEL_ORDER.map(([k,n])=>{ const xs=sel.filter(s=>s.field===k); return xs.length?`<div class="sel"><span class="label">${n}</span><ul class="news">${xs.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:`<span style="font-weight:500">${esc(s.title)}</span>`}${s.why?`<span class="w">${esc(s.why)}</span>`:""}<span class="s">${esc(s.source||"")}${s.theme?` · ${esc(themeName(s.theme))}`:""}</span></li>`).join("")}</ul></div>`:""; }).join("")}
     ${(()=>{ const other=sel.filter(s=>!SEL_ORDER.some(([k])=>k===s.field)); return other.length?`<div class="sel"><span class="label">기타</span><ul class="news">${other.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:esc(s.title)}${s.why?`<span class="w">${esc(s.why)}</span>`:""}<span class="s">${esc(s.source||"")}</span></li>`).join("")}</ul></div>`:""; })()}
   </div>`:""}
+  ${auditHtml(b,i)}
   ${scan.length?`<details class="more"><summary>전체 훑기 ${scan.length}건 · 제목과 링크만</summary><ul class="scan">${scan.map(s=>`<li>${safeUrl(s.url)?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`:esc(s.title)} <span class="muted">· ${esc(s.source||"")}</span></li>`).join("")}</ul></details>`:""}
   ${(b.counter||[]).length?`<details class="more"><summary>반대 신호 ${b.counter.length}건 · 채택한 트렌드에 반하는 증거</summary><div class="counter" style="margin-top:8px">${b.counter.map(c=>`<div class="c">${c.trend&&trendName(c.trend)?`<div class="label" style="margin-bottom:4px">${esc(trendName(c.trend))}</div>`:""}${esc(c.text)}${safeUrl(c.url)?` <a href="${esc(c.url)}" target="_blank" rel="noopener">원문</a>`:""}</div>`).join("")}</div></details>`:""}
   ${renderCandidatesFor(b.date)}`;
@@ -775,6 +801,7 @@ function renderArchive(){
     const months=[...new Set(days.map(e=>e.date.slice(0,7)))];
     body=months.length?months.map((m,k)=>{ const es=days.filter(e=>e.date.startsWith(m));
       return `<details class="more" ${k===0?"open":""}><summary>${esc(m.replace("-","년 "))}월 · ${es.length}일</summary><div class="alist" style="margin-top:8px">${es.map(e=>`<button class="arow" data-day="${esc(e.date)}"><div class="d">${esc(fmtDate(e.date))}</div><div class="h">${esc(e.headline)}</div>${e.deep.map(d=>`<div class="q">· ${esc(d.q)}</div>`).join("")}</button>`).join("")}</div></details>`; }).join("")
+      +((S.audits||[]).length?`<details class="more"><summary>주간 놓친 신호 점검 ${S.audits.length}회 · 제때 잡은 비율 ${[...S.audits].sort((x,y)=>(x.date||"").localeCompare(y.date||"")).map(a=>a.catch_rate!=null?Math.round(a.catch_rate*100)+"%":"–").join(" → ")}</summary>${[...S.audits].sort((x,y)=>(y.date||"").localeCompare(x.date||"")).map(a=>`<div class="aud" style="margin-top:12px"><div class="label">${esc(a.week_from||"")}~${esc(a.week_to||"")}</div>${auditStats(a)}${a.summary?`<p style="margin:4px 0 0">${esc(a.summary)}</p>`:""}<div>${auditMisses(a)}</div></div>`).join("")}</details>`:"")
       +(window.TD_STATIC&&A.years&&A.years.length>1&&Object.keys(A.loaded).length<A.years.length?`<button class="storylink" id="amore">이전 연도 불러오기 ›</button>`:"")
       :`<div class="empty"><h3>${A.loading?"불러오는 중":"아직 보관된 브리프가 없습니다"}</h3></div>`;
   }
@@ -1367,6 +1394,7 @@ renderAll();
   db.collection("themes").onSnapshot(s=>{ S.themes=docs(s); renderStories(); renderBrief(); }, err);
   db.collection("issues").onSnapshot(s=>{ S.issues=docs(s); renderBrief(); renderArchive(); }, err);
   db.collection("watch").onSnapshot(s=>{ S.watch=docs(s); renderBrief(); }, err);
+  db.collection("audits").onSnapshot(s=>{ S.audits=docs(s); renderBrief(); renderArchive(); }, err);
   db.collection("explorations").onSnapshot(s=>{ S.explores=docs(s); renderExplore(); renderArchive(); }, err);
   const keepOpen=fn=>{ const p=$("p-ind"); const og=[...p.querySelectorAll("details.group[open]")].map(d=>d.dataset.group); const ob=[...p.querySelectorAll("details.back[open]")].map(d=>(d.closest(".moved")?".moved ":"details.group ")+`details.back[data-ind="${d.dataset.ind}"]`); fn(); og.forEach(g=>{const d=p.querySelector(`details.group[data-group="${g}"]`); if(d) d.open=true;}); ob.forEach(sel=>p.querySelectorAll(sel).forEach(d=>d.open=true)); };
   db.collection("indicators").onSnapshot(s=>{ S.inds=docs(s); keepOpen(renderIndicators); renderBrief(); }, err);

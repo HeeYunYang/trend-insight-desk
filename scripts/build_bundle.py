@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import archive
 dump, out = sys.argv[1], sys.argv[2]
 with_signals = "--with-signals" in sys.argv
-COLLECTIONS = ["briefs", "stories", "indicators", "trends", "slow_vars", "predictions", "themes", "issues", "explorations", "watch"] + (["field_signals"] if with_signals else [])
+COLLECTIONS = ["briefs", "stories", "indicators", "trends", "slow_vars", "predictions", "themes", "issues", "explorations", "watch", "audits"] + (["field_signals"] if with_signals else [])
 META_DOCS = ["indicator_groups", "indicators_day"]
 
 def read(p):
