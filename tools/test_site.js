@@ -185,7 +185,7 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     const fs = require('fs'); const path = require('path');
     const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bundle.json'), 'utf8'));
     const d = new Date(); const today = new Date(d.getTime() - 7 * 3600e3).toISOString().slice(0, 10);
-    real.collections.audits = [{ id: today, date: today, week_from: '2026-10-04', week_to: '2026-10-10', checked: 12, stats: { on_time: 8, late: 2, under: 1, missed: 1 }, catch_rate: 0.67, summary: '시험용 요약',
+    real.collections.audits = [{ id: today, date: today, week_from: '2026-10-04', week_to: '2026-10-10', checked: 12, stats: { on_time: 8, late: 2, under: 1, missed: 1 }, catch_rate: 0.67, summary: '시험용 요약', balance: { outside_theme_share: 0.25, regions: { '북미': 5, '유럽': 4, '아프리카': 1 }, steeg: { economy: 5, governance: 4, environment: 1 }, over: ['프랑스 금리차 4일 연속'], agenda_gaps: ['중국 디플레이션'] },
       misses: [{ event: '시험용 놓친 사건', happened: '2026-10-06', kind: '놓침', first_seen: '', where: '없음', cause: '점검 목록', why_matters: '왜 중요한지', fix: '점검 목록에 추가', applied: { type: 'checklist', detail: 'x' }, url: 'https://example.com/m' },
                { event: '시험용 늦은 사건', happened: '2026-10-07', kind: '늦음', first_seen: '2026-10-09', where: '선별', cause: '판단', fix: '판단 기준 보정', applied: { type: 'scoring', detail: 'y' } }] }];
     const { p, errs, ctx } = await page(b, { vp: { width: 390, height: 844 }, mobile: true, route: r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(real) }) });
@@ -193,10 +193,32 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     await tab(p, 't-brief');
     ok(await p.isVisible('#sec-audit'), N + ': audit card missing');
     ok((await p.textContent('#sec-audit .stat')).includes('67%'), N + ': catch rate missing');
+    ok((await p.textContent('#sec-audit')).includes('테마 밖 깊은 이슈') && (await p.textContent('#sec-audit')).includes('과다 노출'), N + ': balance line missing');
     await p.locator('#sec-audit details.more > summary').click(); await p.waitForTimeout(100);
     ok((await p.$$('#sec-audit .miss')).length === 2, N + ': misses not listed');
     await tab(p, 't-arch'); await p.waitForTimeout(300);
     ok((await p.textContent('#p-arch')).includes('주간 놓친 신호 점검 1회'), N + ': archive history missing');
+    ok(await noOverflow(p), N + ': overflow');
+    ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
+    await ctx.close();
+  }
+  // blind world ranking + why line on deep issues
+  {
+    const fs = require('fs'); const path = require('path');
+    const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bundle.json'), 'utf8'));
+    const br = real.collections.briefs.slice().sort((x, y) => y.date < x.date ? -1 : 1)[0];
+    br.world_rank = [1, 2, 3, 4, 5, 6, 7].map(k => ({ rank: k, title: '시험 순위 ' + k, url: 'https://example.com/' + k, steeg: ['economy', 'environment', 'governance', 'society', 'tech', 'economy', 'governance'][k - 1], votes: { fronts: 6 - (k % 4), fronts_of: 7, market: k < 3, agenda: k === 2 ? ['CrisisWatch'] : [], persist: k }, theme: k === 2 ? '' : 'money', note: k === 1 ? '시험 메모' : '' }));
+    br.persist_checks = [{ title: '콩고 에볼라', days: 6, decision: '선별로 올림', why: '확산 지역 확대' }];
+    (br.deep_issues || [])[0] && (br.deep_issues[0].why_line = '7개 지역 중 6곳 1면 · 테마 밖');
+    const { p, errs, ctx } = await page(b, { vp: { width: 390, height: 844 }, mobile: true, route: r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(real) }) });
+    const N = 'rank';
+    await tab(p, 't-brief');
+    ok((await p.$$('#sec-rank .rrow')).length === 7, N + ': rank rows');
+    ok((await p.$$('#sec-rank .out')).length === 1, N + ': outside-theme label');
+    ok((await p.$$('#p-brief .qnav a[data-go="sec-rank"]')).length === 1, N + ': quick nav');
+    ok(await p.isVisible('#p-brief .whyline'), N + ': why line');
+    await p.locator('#sec-rank details.more > summary').click(); await p.waitForTimeout(100);
+    ok((await p.textContent('#sec-rank')).includes('콩고 에볼라'), N + ': persist checks');
     ok(await noOverflow(p), N + ': overflow');
     ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
     await ctx.close();

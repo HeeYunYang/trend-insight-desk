@@ -334,6 +334,16 @@ svg.map .col{font-size:13px;fill:var(--muted);letter-spacing:.04em}
 .miss .kd[data-k="놓침"]{color:var(--down);border-color:var(--down)} .miss .kd[data-k="늦음"]{color:var(--warn);border-color:var(--warn)}
 .miss .ev{font-weight:600;font-size:15px}
 .miss .fx{font-size:14px} .miss .cz{font-size:13px;color:var(--muted)}
+.whyline{margin:-4px 0 0;font-size:13px;color:var(--muted)}
+.rank{display:grid;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.rrow{display:grid;grid-template-columns:28px 1fr;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.rrow:first-child{border-top:0}
+.rrow .n{font-family:var(--mono);font-size:15px;color:var(--muted);text-align:center}
+.rrow .t{font-size:15px;font-weight:600}
+.rrow .t a{color:inherit}
+.rrow .v{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:4px;font-size:13px;color:var(--muted)}
+.rrow .v .out{color:var(--s2,#94491A);font-weight:600}
+.rrow .nt{font-size:14px;margin-top:4px}
 .wquiet{font-size:15px;color:var(--muted);margin:0}
 .wlist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
 .wlist li{font-size:14px;border-top:1px solid var(--line);padding-top:8px}
@@ -376,7 +386,7 @@ ul.scan{margin:8px 0 0;padding-left:18px;display:grid;gap:3px;font-size:14px}
 .qnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:-6px}
 .qnav::-webkit-scrollbar{display:none}
 .qnav a{flex:none;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink);text-decoration:none;background:var(--surface)}
-.anchor,#sec-bank,#sec-theme,#sec-watch,#sec-news,.theme{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 108px)}
+.anchor,#sec-rank,#sec-bank,#sec-theme,#sec-watch,#sec-news,.theme{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 108px)}
 .di .dtitles{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:15px}
 .di .dtitles .mono{font-size:13px;color:var(--muted);margin-right:4px}
 details.di-more>summary{cursor:pointer;list-style:none;font-size:15px;font-weight:600;color:var(--accent);padding:10px 0;border-top:1px solid var(--line)}
@@ -576,6 +586,7 @@ function deepHtml(d,{kind="deep",open=false}={}){
       ${d.update_of?`<span class="kchip">업데이트 · 처음 ${esc(d.update_of)}</span>`:""}
       ${d.bank_days!=null?`<span class="kchip">대기 ${esc(d.bank_days)}일${d.score!=null?` · 점수 ${esc(d.score)}`:""}</span>`:""}</div>
     <p class="q">${esc(d.q)}</p>
+    ${d.why_line?`<p class="whyline">왜 골랐나 · ${esc(d.why_line)}</p>`:""}
     ${d.conclusion?`<div class="verdict"><span class="label">결론 먼저</span><p>${esc(d.conclusion)}</p>
       ${(d.confidence||[]).length?`<div class="confs">${d.confidence.map(c=>`<span>${esc(c.label)} <b>${Math.round((c.p||0)*100)}%</b></span>`).join("")}</div>`:""}</div>`:""}
     ${nd?`<ul class="dtitles">${d.disputes.map((x,i)=>`<li><span class="mono">쟁점 ${i+1}</span> ${esc(x.title)}</li>`).join("")}</ul>`:""}
@@ -638,14 +649,31 @@ function auditMisses(a){ return (a.misses||[]).map(m=>`<div class="miss"><div cl
   <div class="cz">${esc(m.happened||"")} 발생 · ${m.first_seen?`처음 잡은 날 ${esc(m.first_seen)}`:"브리프에 없음"}${m.where?` · ${esc(m.where)}`:""}${m.cause?` · 원인: ${esc(m.cause)}`:""}${safeUrl(m.url)?` · <a href="${esc(m.url)}" target="_blank" rel="noopener">원문</a>`:""}</div>
   ${m.why_matters?`<div>${esc(m.why_matters)}</div>`:""}
   ${m.fix?`<div class="fx"><b>${esc(FIX_T[(m.applied||{}).type]||"고친 점")}</b> · ${esc(m.fix)}</div>`:""}</div>`).join(""); }
+function balanceHtml(a){ const bl=a.balance; if(!bl) return "";
+  const fmtMap=(m,names)=>Object.entries(m||{}).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${esc((names&&names[k])||k)} ${esc(v)}`).join(" · ");
+  return `<div class="stat">${bl.outside_theme_share!=null?`<span>테마 밖 깊은 이슈 <b>${Math.round(bl.outside_theme_share*100)}%</b></span>`:""}${bl.regions?`<span>지역: ${fmtMap(bl.regions)}</span>`:""}${bl.steeg?`<span>분야: ${fmtMap(bl.steeg,STEEG)}</span>`:""}</div>
+  ${(bl.over||[]).length?`<p class="note" style="margin:0">과다 노출: ${esc(bl.over.join(" / "))}</p>`:""}${(bl.agenda_gaps||[]).length?`<p class="note" style="margin:0">외부 의제 중 빈 곳: ${esc(bl.agenda_gaps.join(" / "))}</p>`:""}`; }
 function auditHtml(b,i){
   if(i!==0) return "";
   const a=[...(S.audits||[])].sort((x,y)=>(y.date||"").localeCompare(x.date||""))[0];
   if(!a||daysSince(a.date)>7) return "";
   const n=(a.misses||[]).length;
   return `<div class="layer aud" id="sec-audit"><div class="layerhead"><h2>지난주 놓친 신호</h2><span class="label">${esc(a.week_from||"")}~${esc(a.week_to||"")} 점검 · 매주 일요일</span></div>
-    ${auditStats(a)}${a.summary?`<p style="margin:0">${esc(a.summary)}</p>`:""}
+    ${auditStats(a)}${balanceHtml(a)}${a.summary?`<p style="margin:0">${esc(a.summary)}</p>`:""}
     ${n?`<details class="more"><summary>놓치거나 늦은 것 ${n}건과 고친 점</summary><div style="margin-top:6px">${auditMisses(a)}</div></details>`:""}</div>`;
+}
+const STEEG={society:"사회",tech:"기술",economy:"경제",environment:"환경",governance:"정치·안보"};
+function rankHtml(b){
+  const r=b.world_rank||[]; if(!r.length) return "";
+  const pc=b.persist_checks||[];
+  return `<div class="layer" id="sec-rank"><div class="layerhead"><h2>오늘 세계 순위</h2><span class="label">테마·관심사를 보지 않고 매김</span></div>
+    <div class="rank">${r.map((x,k)=>{ const v=x.votes||{};
+      return `<div class="rrow"><span class="n">${esc(x.rank??k+1)}</span><div><div class="t">${safeUrl(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`:esc(x.title)}</div>
+      <div class="v">${x.steeg?`<span>${esc(STEEG[x.steeg]||x.steeg)}</span>`:""}${v.fronts!=null?`<span>지역 1면 ${esc(v.fronts)}/${esc(v.fronts_of??"")}</span>`:""}${v.market?`<span>시장 반응</span>`:""}${(v.agenda||[]).length?`<span>외부 의제: ${esc(v.agenda.join(", "))}</span>`:""}${v.persist>1?`<span>${esc(v.persist)}일째</span>`:""}${x.theme?`<span>${esc(themeName(x.theme))}</span>`:`<span class="out">테마 밖</span>`}</div>
+      ${x.note?`<div class="nt">${esc(x.note)}</div>`:""}</div></div>`; }).join("")}</div>
+    ${b.rank_note?`<p class="note" style="margin:0">${esc(b.rank_note)}</p>`:""}
+    ${pc.length?`<details class="more"><summary>며칠째 보였는데 안 뽑힌 것 ${pc.length}건 · 올릴지 판정</summary><ul class="wlist">${pc.map(x=>`<li><b>${esc(x.title)}</b> <span class="c">· ${esc(x.days)}일째 · ${esc(x.decision||"")}</span><div class="c">${esc(x.why||"")}</div></li>`).join("")}</ul></details>`:""}
+  </div>`;
 }
 const SEL_ORDER=[["world","세계"],["us","미국"],["tech","기술·AI"],["food","식음료·소비"],["korea","한국"]];
 function renderBriefV2(p,b,i){
@@ -662,13 +690,14 @@ function renderBriefV2(p,b,i){
     ${b.explore_note?`<button class="storylink" id="goexplore">이번 주 탐구 ${esc(b.explore_note)} ›</button>`:""}
     ${i===0?weatherHtml():""}
   </div>
-  <nav class="qnav" aria-label="바로 가기">${di.map((d,k)=>`<a href="#" data-go="di-${k}">깊은 이슈 ${k+1}</a>`).join("")}${i===0&&(S.issues||[]).some(x=>x.status==="waiting")?`<a href="#" data-go="sec-bank">대기 이슈</a>`:""}${(b.theme_board||[]).length?`<a href="#" data-go="sec-theme">테마</a>`:""}${b.watch&&(b.watch.fired||[]).length?`<a href="#" data-go="sec-watch">식음료 감시</a>`:""}${sel.length?`<a href="#" data-go="sec-news">뉴스</a>`:""}</nav>
+  <nav class="qnav" aria-label="바로 가기">${di.map((d,k)=>`<a href="#" data-go="di-${k}">깊은 이슈 ${k+1}</a>`).join("")}${(b.world_rank||[]).length?`<a href="#" data-go="sec-rank">세계 순위</a>`:""}${i===0&&(S.issues||[]).some(x=>x.status==="waiting")?`<a href="#" data-go="sec-bank">대기 이슈</a>`:""}${(b.theme_board||[]).length?`<a href="#" data-go="sec-theme">테마</a>`:""}${b.watch&&(b.watch.fired||[]).length?`<a href="#" data-go="sec-watch">식음료 감시</a>`:""}${sel.length?`<a href="#" data-go="sec-news">뉴스</a>`:""}</nav>
   ${b.force_note&&b.force_note.text?`<div class="layer"><div class="layerhead"><h2>${esc(b.force_note.title||"이번 주 큰 힘")}</h2><span class="label">느린 변수 · 주간</span></div>
     <p style="margin:0">${esc(b.force_note.text)}</p>${forceChips(b.force_note.forces)}</div>`:""}
   <div class="layer"><div class="layerhead"><h2>${b.weekly_split?"이번 주 전문가들이 가장 갈린 질문":"오늘의 깊은 이슈"}</h2><span class="label">여러 뉴스 + 전문가 분석을 엮은 판단</span></div>
     ${di.length?di.map((d,k)=>`<div id="di-${k}" class="anchor">${deepHtml({...d,date:b.date})}</div>`).join(""):`<div class="ghostcard">오늘은 조건(분석 3건 이상, 서로 다른 입장)을 채운 이슈가 없어 깊은 이슈를 올리지 않았습니다. 후보는 아래 대기 목록에 있습니다.</div>`}
     ${b.deep_note?`<p class="note" style="margin:0">${esc(b.deep_note)}</p>`:""}
   </div>
+  ${rankHtml(b)}
   ${i===0?bankHtml():""}
   ${(b.theme_board||[]).length?`<div class="layer" id="sec-theme"><div class="layerhead"><h2>테마 현황</h2><span class="label">오늘 움직임 · 누르면 큰 이야기로</span></div>
     <div class="tboard">${b.theme_board.map(t=>`<button class="trow" data-theme="${esc(t.theme)}"><span class="mv" data-m="${esc(t.move||"flat")}">${{up:"▲",down:"▼"}[t.move]||"―"}</span><span class="nm">${esc(themeName(t.theme))}</span><span class="ln">${esc(t.line||"")}</span></button>`).join("")}</div></div>`:""}
