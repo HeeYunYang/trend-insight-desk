@@ -344,6 +344,23 @@ svg.map .col{font-size:13px;fill:var(--muted);letter-spacing:.04em}
 .rrow .v{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:4px;font-size:13px;color:var(--muted)}
 .rrow .v .out{color:var(--s2,#94491A);font-weight:600}
 .rrow .nt{font-size:14px;margin-top:4px}
+.read{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:14px;display:grid;gap:8px}
+.read.pick{border-color:var(--ink)}
+.read h3{margin:0;font-size:18px;line-height:1.4}
+.read h3 a{color:inherit}
+.read .m{font-size:13px;color:var(--muted)}
+.read ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.read .ctr{font-size:14px;border-left:3px solid var(--line-strong);padding-left:10px}
+.read .why{font-size:14px}
+.pcard>summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;gap:4px}
+.pcard>summary::-webkit-details-marker{display:none}
+.pcard{border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pcard .pt{font-size:16px;font-weight:600}
+.pcard .po{font-size:14px;color:var(--muted)}
+.pcard .pb{padding:0 14px 14px;display:grid;gap:10px}
+.pcard .pb h4{margin:4px 0 0;font-size:14px;color:var(--muted);font-weight:600}
+.pcard .pb p{margin:0}
+.pcard .pb ol,.pcard .pb ul{margin:0;padding-left:20px;display:grid;gap:6px}
 .wquiet{font-size:15px;color:var(--muted);margin:0}
 .wlist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:8px}
 .wlist li{font-size:14px;border-top:1px solid var(--line);padding-top:8px}
@@ -503,6 +520,8 @@ nav.tabs.more{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);
       <button class="tab" role="tab" id="t-ind" aria-controls="p-ind" aria-selected="false">지표<span class="n" id="n-ind"></span></button>
       <button class="tab" role="tab" id="t-stories" aria-controls="p-stories" aria-selected="false">큰 이야기<span class="n" id="n-stories"></span></button>
       <button class="tab" role="tab" id="t-explore" aria-controls="p-explore" aria-selected="false">탐구<span class="n" id="n-explore"></span></button>
+      <button class="tab" role="tab" id="t-reads" aria-controls="p-reads" aria-selected="false">큰 흐름 읽기<span class="n" id="n-reads"></span></button>
+      <button class="tab" role="tab" id="t-primer" aria-controls="p-primer" aria-selected="false">상식</button>
       <button class="tab" role="tab" id="t-trends" aria-controls="p-trends" aria-selected="false">트렌드 장부<span class="n" id="n-trends"></span></button>
       <button class="tab" role="tab" id="t-slow" aria-controls="p-slow" aria-selected="false">느린 변수</button>
       <button class="tab" role="tab" id="t-arch" aria-controls="p-arch" aria-selected="false">아카이브</button>
@@ -518,6 +537,8 @@ nav.tabs.more{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);
   <section role="tabpanel" id="p-ind" aria-labelledby="t-ind" hidden></section>
   <section role="tabpanel" id="p-stories" aria-labelledby="t-stories" hidden></section>
   <section role="tabpanel" id="p-explore" aria-labelledby="t-explore" hidden></section>
+  <section role="tabpanel" id="p-reads" aria-labelledby="t-reads" hidden></section>
+  <section role="tabpanel" id="p-primer" aria-labelledby="t-primer" hidden></section>
   <section role="tabpanel" id="p-trends" aria-labelledby="t-trends" hidden></section>
   <section role="tabpanel" id="p-slow" aria-labelledby="t-slow" hidden></section>
   <section role="tabpanel" id="p-arch" aria-labelledby="t-arch" hidden></section>
@@ -536,7 +557,7 @@ const FIELDS = {
 const STAGES = ["태동","성장","성숙","쇠퇴"];
 const FLAG = {new:"NEW", surprise:"예상 밖", linked:"연결"};
 
-const S = { audits:[], watch:[], themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
+const S = { reads:[], primers:[], primerCat:"all", primerQ:"", audits:[], watch:[], themes:[], issues:[], explores:[], briefs:[], stories:[], inds:[], indDay:null, indGroups:[], trends:[], slow:[], preds:[], sync:null, briefIdx:0, fieldFilter:"all", db:null, ready:false };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = id => document.getElementById(id);
@@ -587,6 +608,7 @@ function deepHtml(d,{kind="deep",open=false}={}){
       ${d.bank_days!=null?`<span class="kchip">대기 ${esc(d.bank_days)}일${d.score!=null?` · 점수 ${esc(d.score)}`:""}</span>`:""}</div>
     <p class="q">${esc(d.q)}</p>
     ${d.why_line?`<p class="whyline">왜 골랐나 · ${esc(d.why_line)}</p>`:""}
+    ${(d.primers||[]).length?`<div class="chips">${d.primers.map(id=>{const pr=(S.primers||[]).find(z=>z.id===id); return pr?`<button class="chip" data-primer="${esc(id)}">상식: ${esc(pr.title)}</button>`:"";}).join("")}</div>`:""}
     ${d.conclusion?`<div class="verdict"><span class="label">결론 먼저</span><p>${esc(d.conclusion)}</p>
       ${(d.confidence||[]).length?`<div class="confs">${d.confidence.map(c=>`<span>${esc(c.label)} <b>${Math.round((c.p||0)*100)}%</b></span>`).join("")}</div>`:""}</div>`:""}
     ${nd?`<ul class="dtitles">${d.disputes.map((x,i)=>`<li><span class="mono">쟁점 ${i+1}</span> ${esc(x.title)}</li>`).join("")}</ul>`:""}
@@ -732,6 +754,64 @@ function renderExplore(){
   ${weeks.length?weeks.map((w,k)=>`<details class="more" ${k===0?"open":""}><summary>${fmtDate(w)} 주 · ${xs.filter(x=>x.date===w).length}편</summary><div style="display:grid;gap:16px;margin-top:10px">${xs.filter(x=>x.date===w).map(x=>deepHtml(x,{kind:"explore",open:true})).join("")}</div></details>`).join("")
   :`<div class="empty"><h3>첫 탐구는 다음 월요일 아침에 올라옵니다</h3><p class="muted" style="margin:0">이슈 뱅크에서 2~3개를 골라 배경, 메커니즘, 전문가 비교, 시나리오, 예측까지 정리합니다.</p></div>`}`;
   wireForces(p);
+}
+
+/* ---------- big-picture reading ---------- */
+function renderReads(){
+  const p=$("p-reads"); if(!p) return;
+  const xs=[...(S.reads||[])].sort((a,b)=>(b.added||"").localeCompare(a.added||"")||((b.pick?1:0)-(a.pick?1:0)));
+  const weeks=[...new Set(xs.map(x=>x.week||x.added||""))];
+  $("n-reads").textContent = xs.length?xs.filter(x=>(x.week||x.added)===weeks[0]).length:"";
+  const card=x=>`<article class="read${x.pick?" pick":""}">
+    ${x.pick?`<span class="label">이번 주 한 편</span>`:""}
+    <h3>${safeUrl(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||"")}</a>`:esc(x.title||"")}</h3>
+    <div class="m">${[x.author,x.outlet,x.date,x.minutes?`약 ${x.minutes}분`:""].filter(Boolean).map(esc).join(" · ")}${x.orig_title?`<br>${esc(x.orig_title)}`:""}</div>
+    <div class="chips">${[x.kind,STEEG[x.steeg]||x.steeg,x.region,x.horizon].filter(Boolean).map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
+    ${x.summary?`<p style="margin:0">${esc(x.summary)}</p>`:""}
+    ${(x.claims||[]).length?`<div><span class="label">핵심 주장</span><ul>${x.claims.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div>`:""}
+    ${x.counter?`<div class="ctr"><span class="label">반대 시각</span> ${esc(x.counter)}</div>`:""}
+    ${x.why_read?`<div class="why"><b>왜 읽나</b> · ${esc(x.why_read)}</div>`:""}
+    ${((x.related||{}).primers||[]).length?`<div class="chips">${x.related.primers.map(id=>{const pr=(S.primers||[]).find(z=>z.id===id); return pr?`<button class="chip" data-primer="${esc(id)}">상식: ${esc(pr.title)}</button>`:"";}).join("")}</div>`:""}
+  </article>`;
+  p.innerHTML=`<div class="sectionhead"><h2>큰 흐름 읽기</h2><span class="label">매주 토요일 · 전문가 장문</span></div>
+  <p class="note" style="margin:0">뉴스 한 건이 아니라 몇 년 단위의 흐름을 설명하는 전문가 글을 골라 실제로 읽고 요약합니다. 여러 지역과 분야, 서로 다른 시각을 섞고, 글마다 반대 시각을 함께 적습니다.</p>
+  ${weeks.length?weeks.map((w,k)=>`<details class="more" ${k===0?"open":""}><summary>${esc(w)} 주 · ${xs.filter(x=>(x.week||x.added)===w).length}편</summary><div style="display:grid;gap:12px;margin-top:10px">${xs.filter(x=>(x.week||x.added)===w).map(card).join("")}</div></details>`).join("")
+  :`<div class="empty"><h3>첫 읽을거리를 고르는 중입니다</h3><p class="muted" style="margin:0">매주 토요일 아침, 전문가 장문 4~6편을 골라 올립니다.</p></div>`}`;
+}
+document.addEventListener("click",e=>{ const b=e.target.closest&&e.target.closest("[data-primer]"); if(b){ e.preventDefault(); openPrimer(b.dataset.primer); } });
+/* ---------- primers ---------- */
+const PRIMER_CATS=["돈과 시장","에너지·자원","무역·공급망","기술","지역 기초","기후·환경","보건","기구·제도","사회·인구"];
+function openPrimer(id){ selectTab("t-primer"); S.primerQ=""; S.primerCat="all"; renderPrimers(); const d=$("pr-"+id); if(d){ d.open=true; d.scrollIntoView({block:"start"}); } }
+function renderPrimers(){
+  const p=$("p-primer"); if(!p) return;
+  const keep=document.activeElement&&document.activeElement.id==="pq";
+  const all=[...(S.primers||[])].sort((a,b)=>(a.order||99)-(b.order||99));
+  const cats=PRIMER_CATS.filter(c=>all.some(x=>x.cat===c)).concat([...new Set(all.map(x=>x.cat))].filter(c=>c&&!PRIMER_CATS.includes(c)));
+  const q=S.primerQ.trim().toLowerCase().replace(/\s+/g,"");
+  const xs=all.filter(x=>(S.primerCat==="all"||x.cat===S.primerCat)&&(!q||JSON.stringify([x.title,x.one_line,x.basics,x.how,x.history,x.now]).toLowerCase().replace(/\s+/g,"").includes(q)));
+  const relHtml=r=>{ r=r||{}; const st=(r.stories||[]).map(id=>{const s=S.stories.find(z=>z.id===id); return s?`<button class="storylink" data-story="${esc(id)}">${esc(s.title.replace(/\(.*\)/,"").trim())} ›</button>`:"";}).join("");
+    const ind=(r.indicators||[]).map(id=>{const x=S.inds.find(z=>z.id===id); return x?`<button class="chip" data-gojump="${esc(id)}">${esc(x.name.replace(/\(.*\)/,"").trim())}</button>`:"";}).join("");
+    return st||ind?`<div><h4>지금 기록과 연결</h4><div class="chips" style="margin-top:6px">${st}${ind}</div></div>`:""; };
+  p.innerHTML=`<div class="sectionhead"><h2>상식</h2><span class="label">세계정세를 읽는 기초 · ${all.length}편</span></div>
+  <p class="note" style="margin:0">뉴스를 이해하는 데 필요한 기본 개념과 구조를 정리합니다. 브리프에 자주 나오는데 설명이 필요한 말이 생기면 매주 새 글이 추가됩니다.</p>
+  <div class="asearch"><input id="pq" type="search" placeholder="찾기: 예) 관세, 엘니뇨, 나토" value="${esc(S.primerQ)}" aria-label="상식 찾기" autocomplete="off">
+  <div class="chips"><button class="chip" data-pc="all" aria-pressed="${S.primerCat==="all"}">전체</button>${cats.map(c=>`<button class="chip" data-pc="${esc(c)}" aria-pressed="${S.primerCat===c}">${esc(c)}</button>`).join("")}</div></div>
+  ${xs.length?`<div style="display:grid;gap:10px">${xs.map(x=>`<details class="pcard" id="pr-${esc(x.id)}"><summary><span class="label">${esc(x.cat||"")}${x.level?` · ${esc(x.level)}`:""}</span><span class="pt">${esc(x.title)}</span><span class="po">${esc(x.one_line||"")}</span></summary>
+    <div class="pb">
+      ${x.basics?`<div><h4>기본 개념</h4><p>${esc(x.basics)}</p></div>`:""}
+      ${(x.how||[]).length?`<div><h4>어떻게 작동하나</h4><ol>${x.how.map(h=>`<li>${esc(h)}</li>`).join("")}</ol></div>`:""}
+      ${x.history?`<div><h4>역사 속 예</h4><p>${esc(x.history)}</p></div>`:""}
+      ${x.now?`<div><h4>지금 왜 중요한가</h4><p>${esc(x.now)}</p></div>`:""}
+      ${(x.myths||[]).length?`<div><h4>흔한 오해</h4><ul>${x.myths.map(m=>`<li><b>${esc(m.myth)}</b> → ${esc(m.fact)}</li>`).join("")}</ul></div>`:""}
+      ${relHtml(x.related)}
+      ${(x.links||[]).filter(l=>safeUrl(l.url)).length?`<div><h4>더 읽기</h4><ul>${x.links.filter(l=>safeUrl(l.url)).map(l=>`<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)}</a></li>`).join("")}</ul></div>`:""}
+      ${x.updated?`<p class="note" style="margin:0">고친 날 ${esc(x.updated)}</p>`:""}
+    </div></details>`).join("")}</div>`:`<div class="ghostcard">맞는 글이 없습니다.</div>`}`;
+  const inp=$("pq"); let t=null; inp.addEventListener("input",()=>{ clearTimeout(t); t=setTimeout(()=>{ S.primerQ=inp.value; renderPrimers(); },200); });
+  if(keep){ inp.focus(); const n=inp.value.length; try{ inp.setSelectionRange(n,n); }catch(e){} }
+  p.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>{ S.primerCat=b.dataset.pc; renderPrimers(); });
+  p.querySelectorAll("[data-story]").forEach(b=>b.onclick=()=>openStory(b.dataset.story));
+  p.querySelectorAll("[data-gojump]").forEach(x=>x.onclick=()=>{ selectTab("t-ind"); const card=$("ind-"+x.dataset.gojump); if(card){ const g=card.closest("details.group"); if(g) g.open=true; card.scrollIntoView({block:"start"}); } });
 }
 
 /* ---------- archive ---------- */
@@ -1401,7 +1481,7 @@ function renderSync(){
   el.innerHTML = `로컬 <b>${esc(S.sync.last_synced_date.slice(5))}</b>까지${pending?` · 대기 ${pending}일`:""}`;
 }
 
-function renderAll(){ renderBrief(); renderArchive(); renderIndicators(); renderStories(); renderExplore(); renderTrends(); renderSlow(); renderPreds(); renderSignals(); renderSync(); }
+function renderAll(){ renderBrief(); renderArchive(); renderReads(); renderPrimers(); renderIndicators(); renderStories(); renderExplore(); renderTrends(); renderSlow(); renderPreds(); renderSignals(); renderSync(); }
 renderAll();
 
 /* ---------- data ---------- */
@@ -1423,6 +1503,8 @@ renderAll();
   db.collection("themes").onSnapshot(s=>{ S.themes=docs(s); renderStories(); renderBrief(); }, err);
   db.collection("issues").onSnapshot(s=>{ S.issues=docs(s); renderBrief(); renderArchive(); }, err);
   db.collection("watch").onSnapshot(s=>{ S.watch=docs(s); renderBrief(); }, err);
+  db.collection("reads").onSnapshot(s=>{ S.reads=docs(s); renderReads(); }, err);
+  db.collection("primers").onSnapshot(s=>{ S.primers=docs(s); renderPrimers(); renderReads(); renderBrief(); renderExplore(); }, err);
   db.collection("audits").onSnapshot(s=>{ S.audits=docs(s); renderBrief(); renderArchive(); }, err);
   db.collection("explorations").onSnapshot(s=>{ S.explores=docs(s); renderExplore(); renderArchive(); }, err);
   const keepOpen=fn=>{ const p=$("p-ind"); const og=[...p.querySelectorAll("details.group[open]")].map(d=>d.dataset.group); const ob=[...p.querySelectorAll("details.back[open]")].map(d=>(d.closest(".moved")?".moved ":"details.group ")+`details.back[data-ind="${d.dataset.ind}"]`); fn(); og.forEach(g=>{const d=p.querySelector(`details.group[data-group="${g}"]`); if(d) d.open=true;}); ob.forEach(sel=>p.querySelectorAll(sel).forEach(d=>d.open=true)); };

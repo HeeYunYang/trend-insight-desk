@@ -223,6 +223,43 @@ const tab = async (p, id) => { await p.click('#' + id); await p.waitForTimeout(1
     ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
     await ctx.close();
   }
+  // primers tab + big-picture reading tab
+  {
+    const fs = require('fs'); const path = require('path');
+    const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bundle.json'), 'utf8'));
+    const nP = (real.collections.primers || []).length;
+    real.collections.reads = [
+      { id: 'r1', added: '2026-10-17', week: '2026-10-17', pick: true, title: '시험 장문 하나', orig_title: 'Test essay', author: '홍길동', outlet: 'Brookings', date: '2026-10-10', url: 'https://example.com/r1', kind: '에세이', steeg: 'economy', region: '세계', horizon: '1–3년', minutes: 15, summary: '요약 문장.', claims: ['주장 1', '주장 2'], counter: '반대 시각 문장', why_read: '읽을 이유', related: { primers: ['enso-food'] } },
+      { id: 'r2', added: '2026-10-17', week: '2026-10-17', title: '시험 장문 둘', author: 'A', outlet: 'ISS Africa', url: 'https://example.com/r2', steeg: 'governance', summary: 's' }];
+    const br = real.collections.briefs.slice().sort((x, y) => y.date < x.date ? -1 : 1)[0];
+    (br.deep_issues || [])[0] && (br.deep_issues[0].primers = ['bond-yields']);
+    const { p, errs, ctx } = await page(b, { vp: { width: 390, height: 844 }, mobile: true, route: r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(real) }) });
+    const N = 'primer';
+    await tab(p, 't-primer');
+    ok((await p.$$('#p-primer details.pcard')).length === nP && nP >= 10, N + ': primer cards ' + nP);
+    ok(!(await p.locator('#p-primer .pcard .pb').first().isVisible()), N + ': cards start collapsed');
+    await p.fill('#pq', '엘니뇨'); await p.waitForTimeout(400);
+    ok((await p.$$('#p-primer details.pcard')).length === 1, N + ': search');
+    await p.fill('#pq', ''); await p.waitForTimeout(300);
+    await p.click('#p-primer [data-pc="보건"]'); await p.waitForTimeout(150);
+    ok((await p.$$('#p-primer details.pcard')).length >= 1 && (await p.$$('#p-primer details.pcard')).length < nP, N + ': category filter');
+    await p.click('#p-primer [data-pc="all"]'); await p.waitForTimeout(150);
+    await p.locator('#pr-oil-chokepoints > summary').click(); await p.waitForTimeout(150);
+    ok((await p.textContent('#pr-oil-chokepoints')).includes('어떻게 작동하나'), N + ': sections');
+    const sl = p.locator('#pr-oil-chokepoints [data-story]');
+    if (await sl.count()) { await sl.first().click(); await p.waitForTimeout(300); ok(await p.isVisible('#p-stories'), N + ': story jump'); }
+    await tab(p, 't-reads');
+    ok((await p.$$('#p-reads article.read')).length === 2, N + ': reads cards');
+    ok((await p.$$('#p-reads article.read.pick')).length === 1, N + ': pick');
+    await p.click('#p-reads [data-primer="enso-food"]'); await p.waitForTimeout(400);
+    ok(await p.isVisible('#p-primer') && await p.evaluate(() => document.getElementById('pr-enso-food').open), N + ': read→primer jump');
+    await tab(p, 't-brief');
+    const pc = p.locator('#p-brief [data-primer="bond-yields"]');
+    if (await pc.count()) { await pc.first().click(); await p.waitForTimeout(400); ok(await p.evaluate(() => document.getElementById('pr-bond-yields').open), N + ': deep issue→primer jump'); }
+    ok(await noOverflow(p), N + ': overflow');
+    ok(errs.length === 0, N + ': errors ' + errs.join(' | '));
+    await ctx.close();
+  }
   // missing bundle -> banner, no crash
   {
     const { p, errs, ctx } = await page(b, { route: r => r.fulfill({ status: 404, body: 'nope' }) });
